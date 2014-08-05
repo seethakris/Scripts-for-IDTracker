@@ -95,7 +95,7 @@ print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories Before correction.j
 fs = figure(2);
 print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories After correction.jpeg']);
 
-save([PathName,FileName(1:end-4), '_modified_trajectories'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
+save([PathName,FileName(1:end-4), '_modified_trajectories.mat'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
 
 
 

@@ -1,9 +1,10 @@
 function idTracker_Heatmap(tbin, fps)
 %% Get Directory from user - directory can contain one or more modified trajectories
 %% Input :
-%tbin - bin data over specified time bin and plot heatmaps for each
-%fps - frames per second
+%   tbin - bin data over specified time bin and plot heatmaps for each
+%   fps - frames per second
 
+%Optional user-input
 %Radius
 Rad = 8;
 
@@ -102,3 +103,32 @@ set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
 saveas(fs1, [Result_Folder, filesep, name_file], 'jpg');
 end
 
+
+function [TimeSpent] = find_mean_time(X,Y,TimeSpent,flag)
+
+NumFish = size(X,2);
+temp_TimeSpent = zeros(size(TimeSpent,1),size(TimeSpent,2), NumFish);
+
+if flag == 1
+    disp('Processing Fish in Group1');
+elseif flag==2
+    disp('Processing Fish in Group2');
+else
+    disp('Processing Subject Fish');
+end
+
+
+for ii = 1:NumFish
+       
+    %Extract time spent per fish and then combine
+    XY = [squeeze(X(:,ii)),squeeze(Y(:,ii))];
+    
+    for jj = 1:length(XY)
+        temp_TimeSpent(round(XY(jj,1)), round(XY(jj,2)), ii) = temp_TimeSpent(round(XY(jj,1)), round(XY(jj,2)), ii) + 1;
+    end
+    
+end
+
+TimeSpent = TimeSpent + mean(temp_TimeSpent,3);
+
+end

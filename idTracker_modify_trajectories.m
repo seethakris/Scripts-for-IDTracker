@@ -1,5 +1,5 @@
 function idTracker_modify_trajectories
-%% Load data, enter fish number for each group as seen during tracking and correct trajectories. 
+%% Load data, enter fish number for each group as seen during tracking and correct trajectories.
 %% Select trajectories.mat file for the experiment, enter Fish Numbers (only for first time)
 %  Group1 are fish on left hand side , Group 2 are on the right
 
@@ -7,7 +7,7 @@ warning off
 close all
 
 %User Input
-threshold = 400;
+threshold = 500;
 
 %Ask user to load trajectories.mat file
 
@@ -43,8 +43,8 @@ else
         
         grp1_fish = str2num(answer{1});
         subject_fish = str2num(answer{2});
-        grp2_fish = setdiff(setdiff(All_fish,grp1_fish),subject_fish);     
-                
+        grp2_fish = setdiff(setdiff(All_fish,grp1_fish),subject_fish);
+        
         %Confirm with user
         answer{3} = sprintf('%.0f,' , grp2_fish);
         answer{3} = answer{3}(1:end-1);
@@ -65,7 +65,7 @@ else
             FishNumber.subject = subject_fish;
             save([PathName,FileName(1:end-4),'_FishNumber.mat'],'FishNumber');
         end
-    end    
+    end
 end
 
 %% Analysis
@@ -90,10 +90,14 @@ Subject_area =[150, 1150, 450, 200];
 [grp2_XY_mod] = fix_trajectories(grp2_XY,threshold,2,Group2_area);
 [subject_XY_mod] = fix_trajectories(subject_XY,threshold,3, Subject_area);
 
+%Save Figures in This Folder
+Result_Folder = [PathName, filesep, 'Figures', filesep, FileName(1:end-4), filesep];
+mkdir(Result_Folder);
+
 fs = figure(1);
-print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories Before correction.jpeg']);
+print('-djpeg', [Result_Folder,  'Trajectories Before correction.jpeg']);
 fs = figure(2);
-print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories After correction.jpeg']);
+print('-djpeg', [Result_Folder, 'Trajectories After correction.jpeg']);
 
 save([PathName,FileName(1:end-4), '_modified_trajectories.mat'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
 

@@ -41,6 +41,14 @@ for ii = 1:numFish
         end
     end
     
+    %Check if first frame was misidentified and correct it to the first
+    %correctly identified value
+    if traj(1,ii,1) < area(1) || traj(1,ii,1) > area(2) || traj(1,ii,2) > area(3) || traj(1,ii,2) < area(4)
+        ind1 = find(traj(:,ii,1) > area(1) & traj(:,ii,1) < area(2) & traj(:,ii,2) < area(3) & traj(:,ii,2) > area(4), 1, 'first');
+        traj(1:ind1-1,ii,1) = squeeze(traj(ind1,ii,1));
+        traj(1:ind1-1,ii,2) = squeeze(traj(ind1,ii,2));
+    end
+    
     %     %Find mean and std for each fish
     %     mean_x_fish(ii) = mean(traj(:,ii,1));
     %     std_x_fish(ii) = std(traj(:,ii,1));

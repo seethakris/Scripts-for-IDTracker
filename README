@@ -15,9 +15,9 @@ Scripts for analyzing trajectories.mat file from idTracker
 		to correct errors in the trajectories. 
 
 2. Analyse trajectories
-	a. idTracker_Heatmap (tbin, fps) - Draw heatmaps of the fish's mean trajectories using a user specified time bin. Also saves heatmaps across the entire time period.User specifies time bin (tbin, in seconds) and sampling rate (fps)  as input.
-		Radius for interpolation and colormap scale can be changed in the beginning of the script itself.
-		This script runs through the directory to look for any modified trajectory files so many experiments can be analyzed in one go.  
+	a. idTracker_Heatmap (tbin, fps) - Draw heatmaps of the fish's mean trajectories 		using a user specified time bin. Also saves heatmaps across the entire 			time period.User specifies time bin (tbin, in seconds) and sampling rate 		(fps) as input.
+		Radius for interpolation and colormap scale can be changed in the 			beginning of the script itself.
+		This script runs through the directory to look for any modified trajectory 		files so many experiments can be analyzed in one go.  
 
 	b. subject_dist_from_grps - Distance of subject fish from each group. Averaged
 		across frames. 

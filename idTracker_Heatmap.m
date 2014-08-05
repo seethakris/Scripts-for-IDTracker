@@ -1,17 +1,24 @@
 function idTracker_Heatmap(tbin, fps)
-%% Get Directory from user - directory can contain one or more modified trajectories
+%% Get Directory from user and plot heat maps according to the specified time bin and fps
+%% - directory can contain one or more modified trajectories
+
 %% Input :
 %   tbin - bin data over specified time bin and plot heatmaps for each
 %   fps - frames per second
 
-%Optional user-input
+%Optional changes
 %Radius
-Rad = 8;
+Rad = 4;
 
 %Colorbar scaling
 cmin = 0;
-cmax = 2;
+cmax = 0.5;
 
+%Smoothing factor
+smth = 20;
+
+
+%% Main Script
 PathName = uigetdir(pwd, 'Select modified trajectories file');
 FileName = dir([PathName, filesep,'*modified*.mat']);
 
@@ -22,6 +29,8 @@ for ii = 1:length(FileName)
     SaveName = FileName(ii).name(1:strfind(FileName(1).name, 'modified')-2);
     Result_Folder = [PathName, filesep, 'Figures', filesep, SaveName];
     mkdir(Result_Folder);
+    
+    disp(['Processing Folder...', SaveName]);
     
     traj = load([PathName, filesep, FileName(ii).name]);
     NumFrames = size(traj.grp1_XY_mod, 1);
@@ -54,32 +63,31 @@ for ii = 1:length(FileName)
         TimeSpent = zeros(round(max_traj_X), round(max_traj_Y));
         
         %Group1
-        
-        [TimeSpent] = find_mean_time(traj.grp1_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp1_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,1);
+        [TimeSpent] = find_mean_time(traj.grp1_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp1_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
         
         %Group2
-        [TimeSpent] = find_mean_time(traj.grp2_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp2_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,2);
+        [TimeSpent] = find_mean_time(traj.grp2_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp2_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
         
         %Subject
-        [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,3);
+        [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
         
-        plot_heatmap(TimeSpent,Rad, cmin, cmax,min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder,jj, frame_bin)
+        plot_heatmap(TimeSpent,Rad, smth, cmin, cmax,min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder,jj, frame_bin)
         
         OverallTimeSpent = OverallTimeSpent + TimeSpent;
     end
     
-    plot_heatmap(OverallTimeSpent,3, 0, 2, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder)   
+    plot_heatmap(OverallTimeSpent,Rad, 20, 0, 2, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder)
 end
 
 end
 
 
-function plot_heatmap(TimeSpent,Rad,cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder, jj, frame_bin)
+function plot_heatmap(TimeSpent,Rad,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder, jj, frame_bin)
 
 %Plot Heatmaps
 S=+(bwdist(padarray(1,[1,1]*double(round(Rad*1.5))))<=Rad);
 Filt_TimeSpent=double(convn(TimeSpent,S,'same'));
-Filt_TimeSpent = smoothn(Filt_TimeSpent,5);
+Filt_TimeSpent = smoothn(Filt_TimeSpent,smth);
 
 fs1 = figure(1);
 set(fs1,'color','white')
@@ -104,22 +112,14 @@ saveas(fs1, [Result_Folder, filesep, name_file], 'jpg');
 end
 
 
-function [TimeSpent] = find_mean_time(X,Y,TimeSpent,flag)
+function [TimeSpent] = find_mean_time(X,Y,TimeSpent)
 
 NumFish = size(X,2);
 temp_TimeSpent = zeros(size(TimeSpent,1),size(TimeSpent,2), NumFish);
 
-if flag == 1
-    disp('Processing Fish in Group1');
-elseif flag==2
-    disp('Processing Fish in Group2');
-else
-    disp('Processing Subject Fish');
-end
-
 
 for ii = 1:NumFish
-       
+    
     %Extract time spent per fish and then combine
     XY = [squeeze(X(:,ii)),squeeze(Y(:,ii))];
     

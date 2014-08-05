@@ -1,4 +1,4 @@
-function [modified_trajectories] = fix_trajectories(traj,threshold,flag)
+function [modified_trajectories] = fix_trajectories(traj,threshold,flag, area)
 
 
 numFish = size(traj,2);
@@ -15,10 +15,17 @@ title('Before')
 legend('grp1', 'grp2', 'subject')
 clear temp
 
+if flag == 1
+    disp('Processing Fish in Group1');
+elseif flag==2
+    disp('Processing Fish in Group2');
+else
+    disp('Processing Subject Fish');
+end
+
 %Go through each frame in each fish - First correct NaNs and then shootouts
 for ii = 1:numFish
     
-    disp(['Processing Fish..', int2str(ii)]);
     
     %if first frame in NaN and then correct it to the first found value
     if isnan(traj(1,ii,1))
@@ -34,18 +41,18 @@ for ii = 1:numFish
         end
     end
     
-    %Find mean and std for each fish
-    mean_x_fish(ii) = mean(traj(:,ii,1));
-    std_x_fish(ii) = std(traj(:,ii,1));
-    x_thresh1 = mean_x_fish(ii) + 2 * std_x_fish(ii);
-    x_thresh2 = mean_x_fish(ii) - 2 * std_x_fish(ii);
-    
-    %Find mean and std for each fish
-    mean_y_fish(ii) = mean(traj(:,ii,2));
-    std_y_fish(ii) = std(traj(:,ii,2));
-    y_thresh1 = mean_y_fish(ii) +  2*std_y_fish(ii);
-    y_thresh2 = mean_y_fish(ii) -  2*std_y_fish(ii);
-    
+    %     %Find mean and std for each fish
+    %     mean_x_fish(ii) = mean(traj(:,ii,1));
+    %     std_x_fish(ii) = std(traj(:,ii,1));
+    %     x_thresh1 = mean_x_fish(ii) + 2 * std_x_fish(ii);
+    %     x_thresh2 = mean_x_fish(ii) - 2 * std_x_fish(ii);
+    %
+    %     %Find mean and std for each fish
+    %     mean_y_fish(ii) = mean(traj(:,ii,2));
+    %     std_y_fish(ii) = std(traj(:,ii,2));
+    %     y_thresh1 = mean_y_fish(ii) +  2*std_y_fish(ii);
+    %     y_thresh2 = mean_y_fish(ii) -  2*std_y_fish(ii);
+    %
     
     %Check if there was huge jump between consecutive values and
     %correct with previous value
@@ -57,19 +64,25 @@ for ii = 1:numFish
         
         %One last check to remove anything above mean+/-2standarddeviation - for
         %the subject search in y only, for the groups search in x and y
-        if flag == 1
-            if traj(jj+1,ii,1) > 630 || traj(jj+1,ii,2) > y_thresh1 || traj(jj+1,ii,2) < y_thresh2
-                traj(jj+1,ii,:) = traj(jj,ii,:);
-            end
-        elseif flag == 3
-            if traj(jj+1,ii,2) > 450 
-                traj(jj+1,ii,:) = traj(jj,ii,:);
-            end
-        elseif flag == 2
-            if traj(jj+1,ii,1) < x_thresh2 || traj(jj+1,ii,2) > y_thresh1 || traj(jj+1,ii,2) < y_thresh2
-                traj(jj+1,ii,:) = traj(jj,ii,:);
-            end
+        
+        if traj(jj+1,ii,1) < area(1) || traj(jj+1,ii,1) > area(2) || traj(jj+1,ii,2) > area(3) || traj(jj+1,ii,2) < area(4)
+            traj(jj+1,ii,:) = traj(jj,ii,:);
         end
+        
+        
+        %         if flag == 1
+        %             if traj(jj+1,ii,1) > 630 || traj(jj+1,ii,2) > y_thresh1 || traj(jj+1,ii,2) < y_thresh2
+        %                 traj(jj+1,ii,:) = traj(jj,ii,:);
+        %             end
+        %         elseif flag == 3
+        %             if traj(jj+1,ii,2) > 450
+        %                 traj(jj+1,ii,:) = traj(jj,ii,:);
+        %             end
+        %         elseif flag == 2
+        %             if traj(jj+1,ii,1) < x_thresh2 || traj(jj+1,ii,2) > y_thresh1 || traj(jj+1,ii,2) < y_thresh2
+        %                 traj(jj+1,ii,:) = traj(jj,ii,:);
+        %             end
+        %         end
         
     end
 end

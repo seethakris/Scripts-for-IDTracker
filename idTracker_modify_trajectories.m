@@ -1,12 +1,13 @@
 function idTracker_modify_trajectories
-%% Load data and plot average heatmaps of animals of certain grps.
+%% Load data, enter fish number for each group as seen during tracking and correct trajectories. 
+%% Select trajectories.mat file for the experiment, enter Fish Numbers (only for first time)
+%  Group1 are fish on left hand side , Group 2 are on the right
 
 warning off
 close all
 
 %User Input
-threshold = 200;
-
+threshold = 400;
 
 %Ask user to load trajectories.mat file
 
@@ -20,7 +21,7 @@ All_fish = 1:numFish;
 
 %% Check if trajectories.mat ahs a field called fish number, else ask theuser and save it
 
-if isfield(Traj, 'FishNumber')
+if exist([PathName,FileName(1:end-4),'_FishNumber.mat'])
     grp1_fish = Traj.FishNumber.grp1;
     grp2_fish = Traj.FishNumber.grp2;
     subject_fish = Traj.FishNumber.subject;
@@ -62,7 +63,7 @@ else
             FishNumber.grp1 = grp1_fish;
             FishNumber.grp2 = grp2_fish;
             FishNumber.subject = subject_fish;
-            save([PathName, FileName],'FishNumber', '-append');
+            save([PathName,FileName(1:end-4),'_FishNumber.mat'],'FishNumber');
         end
     end    
 end
@@ -74,19 +75,27 @@ grp1_XY = Traj.trajectories(:,grp1_fish,:);
 grp2_XY = Traj.trajectories(:,grp2_fish,:);
 subject_XY = Traj.trajectories(:,subject_fish,:);
 
+%Approximate area that should be occupied by groups of fish.
+%[xleft,xright,ytop,ybottom];
+Group1_area =[150, 650, 950, 450];
+Group2_area =[650, 1150, 950, 450];
+Subject_area =[150, 1150, 450, 200];
+
+
 % Remove any misidentification in trajectory by finding big jumps
 % between consecutive points and interpolate -
 % seperately for each group of fish
-[grp1_XY_mod] = fix_trajectories(grp1_XY,threshold,1);
-[grp2_XY_mod] = fix_trajectories(grp2_XY,threshold,2);
-[subject_XY_mod] = fix_trajectories(subject_XY,threshold,3);
+
+[grp1_XY_mod] = fix_trajectories(grp1_XY,threshold,1,Group1_area);
+[grp2_XY_mod] = fix_trajectories(grp2_XY,threshold,2,Group2_area);
+[subject_XY_mod] = fix_trajectories(subject_XY,threshold,3, Subject_area);
 
 fs = figure(1);
 print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories Before correction.jpeg']);
 fs = figure(2);
 print('-djpeg', [PathName, FileName(1:end-4), '_Trajectories After correction.jpeg']);
 
-save([PathName,FileName(1:end-4), '_modiefied_trajectories'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
+save([PathName,FileName(1:end-4), '_modified_trajectories'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
 
 
 

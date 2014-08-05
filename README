@@ -1,0 +1,4 @@
+Scripts for analyzing trajectories.mat file from idTracker
+
+1. idTracker_Heatmap.m - Draw heatmaps of the fish's mean trajectories 
+			throughout the video

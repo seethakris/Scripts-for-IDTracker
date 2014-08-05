@@ -1,4 +1,18 @@
 Scripts for analyzing trajectories.mat file from idTracker
 
-1. idTracker_Heatmap.m - Draw heatmaps of the fish's mean trajectories 
-			throughout the video
+1.Scripts that prepare files for analysis
+	a. idTracker_modify_trajectories - On the first run, this script asks
+		the user to enter the fish number as tracked for each group. 
+		It then looks for NaNs (when no fish was tracked) and jumps 
+		(when fish was misidnetified) in the trajectories and 
+		corrects them. The modified trajectories are then stored in a new 
+		.mat file. 
+
+	b. fix_trajectories - function called by  idTracker_modify_trajectories  
+		to correct errors in the trajectories. 
+
+2. Analyse trajectories
+	a. idTracker_Heatmap.m - Draw heatmaps of the fish's mean trajectories using
+ 		a user specified time bin.
+	b. subject_dist_from_grps - Distance of subject fish from each group. Averaged
+		across frames. 

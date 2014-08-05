@@ -2,11 +2,14 @@ Scripts for analyzing trajectories.mat file from idTracker
 
 1.Scripts that prepare files for analysis
 	a. idTracker_modify_trajectories - On the first run, this script asks
-		the user to enter the fish number as tracked for each group. 
+		the user to enter the fish number as tracked for each group
+		Group 1 - left hand side
+		Group 2 - right hand side 
 		It then looks for NaNs (when no fish was tracked) and jumps 
 		(when fish was misidnetified) in the trajectories and 
 		corrects them. The modified trajectories are then stored in a new 
-		.mat file. 
+		.mat file. If there is any error in fish numbers provided, 
+		delete the mat file names FishNumber.mat and start over.  
 
 	b. fix_trajectories - function called by  idTracker_modify_trajectories  
 		to correct errors in the trajectories. 

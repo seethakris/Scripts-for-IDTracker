@@ -71,7 +71,7 @@ for ii = 1:length(FileName)
         %Subject
         [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
         
-        plot_heatmap(TimeSpent,Rad, smth, cmin, cmax,min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder,jj, frame_bin)
+        plot_heatmap(TimeSpent,Rad, smth, cmin, cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder,jj, frame_bin)
         
         OverallTimeSpent = OverallTimeSpent + TimeSpent;
     end
@@ -101,7 +101,7 @@ box off
 xlabel('x distance (mm)', 'FontSize',12);
 ylabel('y distance (mm)', 'FontSize',12);
 
-if nargin == 12
+if nargin == 13
     name_file = ['HeatMap_T= ',int2str(round(jj./fps)), ' To ', int2str(round((jj+frame_bin-1)./fps)),'secs'];
 else
     name_file = ['HeatMap_AllTimePoints'];

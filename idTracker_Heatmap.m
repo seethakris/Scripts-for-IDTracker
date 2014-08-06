@@ -7,21 +7,21 @@ function idTracker_Heatmap(tbin, fps)
 %   fps - frames per second
 
 %Optional changes
-%Radius
-Rad = 4;
 
 %Colorbar scaling
 cmin = 0;
-cmax = 0.5;
+cmax = 0.1;
 
 %Smoothing factor
-smth = 20;
+smth = 10;
 
+%size for moving average
+expandnum = 5; %groups
+expandnum_sub = 5; %subject
 
 %% Main Script
 PathName = uigetdir(pwd, 'Select modified trajectories file');
 FileName = dir([PathName, filesep,'*modified*.mat']);
-
 
 
 for ii = 1:length(FileName)
@@ -37,7 +37,7 @@ for ii = 1:length(FileName)
     frame_bin = tbin*fps;
     
     %Take number of frames divisible by the time bin and collapse the rest
-    LastFrame = (fix(NumFrames/frame_bin)-1)*frame_bin;
+    LastFrame = (fix(NumFrames/frame_bin))*frame_bin;
     
     %Create a timespent variable spanning all x,y
     All_traj_X = [reshape(traj.grp1_XY_mod(:,:,1),size(traj.grp1_XY_mod,1)*size(traj.grp1_XY_mod,2),1); ...
@@ -47,59 +47,62 @@ for ii = 1:length(FileName)
         reshape(traj.grp2_XY_mod(:,:,2),size(traj.grp2_XY_mod,1)*size(traj.grp2_XY_mod,2),1);...
         traj.subject_XY_mod(:,1,2)];
     
-    min_traj_X = min(All_traj_X);
-    max_traj_X = max(All_traj_X);
-    min_traj_Y = min(All_traj_Y);
-    max_traj_Y = max(All_traj_Y);
+    min_traj_X = round(min(All_traj_X));
+    max_traj_X = round(max(All_traj_X));
+    min_traj_Y = round(min(All_traj_Y));
+    max_traj_Y = round(max(All_traj_Y));
     
     clear All_traj_X All_traj_Y
     
-    OverallTimeSpent = zeros(round(max_traj_X), round(max_traj_Y));
+    OverallTimeSpent = zeros(round(max_traj_X)+expandnum, round(max_traj_Y)+expandnum);
     
     
     %Go through each time bin and plot average heatmap
     for jj = 1:frame_bin:LastFrame
         
-        TimeSpent = zeros(round(max_traj_X), round(max_traj_Y));
+        TimeSpent = zeros(round(max_traj_X)+expandnum, round(max_traj_Y)+expandnum);
         
         %Group1
-        [TimeSpent] = find_mean_time(traj.grp1_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp1_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
+        [TimeSpent] = find_mean_time(traj.grp1_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp1_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,expandnum);
         
         %Group2
-        [TimeSpent] = find_mean_time(traj.grp2_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp2_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
+        [TimeSpent] = find_mean_time(traj.grp2_XY_mod(jj:jj+frame_bin-1,:,1), traj.grp2_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,expandnum);
         
         %Subject
-        [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent);
+        [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,expandnum_sub);
         
-        plot_heatmap(TimeSpent,Rad, smth, cmin, cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder,jj, frame_bin)
+        plot_heatmap(TimeSpent, smth, cmin, cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder,jj, frame_bin)
         
         OverallTimeSpent = OverallTimeSpent + TimeSpent;
     end
     
-    plot_heatmap(OverallTimeSpent,Rad, 20, 0, 2, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder)
+    plot_heatmap(OverallTimeSpent, smth, cmin, cmax*5, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps,expandnum, Result_Folder)
 end
 
 end
 
+%% Plot Heatmaps
+function plot_heatmap(TimeSpent,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder, jj, frame_bin)
 
-function plot_heatmap(TimeSpent,Rad,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, Result_Folder, jj, frame_bin)
-
-%Plot Heatmaps
-S=+(bwdist(padarray(1,[1,1]*double(round(Rad*1.5))))<=Rad);
-Filt_TimeSpent=double(convn(TimeSpent,S,'same'));
-Filt_TimeSpent = smoothn(Filt_TimeSpent,smth);
+%Plot Heatmaps - after smoothing
+TimeSpent = TimeSpent(min_traj_X:max_traj_X+expandnum,min_traj_Y:max_traj_Y+expandnum);
+TimeSpent_resize = imresize(TimeSpent, 0.5, 'cubic');
+Filt_TimeSpent = medfilt2(TimeSpent_resize, [smth smth]);
 
 fs1 = figure(1);
 set(fs1,'color','white')
-pcolor((Filt_TimeSpent(min_traj_X:max_traj_X,min_traj_Y:max_traj_Y)./fps)')
-caxis([cmin cmax]) % Colorbar setting
-colorbar
-colormap(jet(2000))
-shading interp
+pcolor((Filt_TimeSpent./fps)')
 set(gca, 'TickDir','out', 'FontSize',12)
 box off
-xlabel('x distance (mm)', 'FontSize',12);
-ylabel('y distance (mm)', 'FontSize',12);
+xlabel(gca,'x distance (pixels)', 'FontSize',12);
+ylabel(gca,'y distance (pixels)', 'FontSize',12);
+shading interp
+
+caxis([cmin cmax]) % Colorbar setting
+cbar_handle = colorbar;
+colormap(jet(2000))
+
+ylabel(cbar_handle, 'seconds/pixel','FontSize',12)
 
 if nargin == 13
     name_file = ['HeatMap_T= ',int2str(round(jj./fps)), ' To ', int2str(round((jj+frame_bin-1)./fps)),'secs'];
@@ -112,7 +115,8 @@ saveas(fs1, [Result_Folder, filesep, name_file], 'jpg');
 end
 
 
-function [TimeSpent] = find_mean_time(X,Y,TimeSpent)
+%% Extract timespent in each pixel per fish
+function [TimeSpent] = find_mean_time(X,Y,TimeSpent,expandnum)
 
 NumFish = size(X,2);
 temp_TimeSpent = zeros(size(TimeSpent,1),size(TimeSpent,2), NumFish);
@@ -123,8 +127,9 @@ for ii = 1:NumFish
     %Extract time spent per fish and then combine
     XY = [squeeze(X(:,ii)),squeeze(Y(:,ii))];
     
+    
     for jj = 1:length(XY)
-        temp_TimeSpent(round(XY(jj,1)), round(XY(jj,2)), ii) = temp_TimeSpent(round(XY(jj,1)), round(XY(jj,2)), ii) + 1;
+        temp_TimeSpent(round(XY(jj,1)):round(XY(jj,1))+expandnum, round(XY(jj,2)):round(XY(jj,2))+expandnum, ii) = temp_TimeSpent(round(XY(jj,1)):round(XY(jj,1))+expandnum, round(XY(jj,2)):round(XY(jj,2))+expandnum, ii) + 1;
     end
     
 end

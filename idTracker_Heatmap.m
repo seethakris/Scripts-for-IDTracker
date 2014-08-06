@@ -55,8 +55,7 @@ for ii = 1:length(FileName)
     clear All_traj_X All_traj_Y
     
     OverallTimeSpent = zeros(round(max_traj_X)+expandnum, round(max_traj_Y)+expandnum);
-    
-    
+        
     %Go through each time bin and plot average heatmap
     for jj = 1:frame_bin:LastFrame
         
@@ -93,6 +92,7 @@ fs1 = figure(1);
 set(fs1,'color','white')
 pcolor((Filt_TimeSpent./fps)')
 set(gca, 'TickDir','out', 'FontSize',12)
+set(gca, 'YDir', 'reverse');
 box off
 xlabel(gca,'x distance (pixels)', 'FontSize',12);
 ylabel(gca,'y distance (pixels)', 'FontSize',12);

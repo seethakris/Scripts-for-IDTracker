@@ -1,6 +1,7 @@
 Scripts for analyzing trajectories.mat file from idTracker
 
 1.Scripts that prepare files for analysis
+
 	a. idTracker_modify_trajectories - On the first run, this script asks
 		the user to enter the fish number as tracked for each group
 		Group 1 - left hand side
@@ -11,13 +12,38 @@ Scripts for analyzing trajectories.mat file from idTracker
 		.mat file. If there is any error in fish numbers provided, 
 		delete the mat file names FishNumber.mat and start over.  
 
+
 	b. fix_trajectories - function called by  idTracker_modify_trajectories  
 		to correct errors in the trajectories. 
 
 2. Analyse trajectories
+
 	a. idTracker_Heatmap (tbin, fps) - Draw heatmaps of the fish's mean trajectories using a user specified time bin. 
 		Also saves heatmaps across the entire time period.User specifies time bin (tbin, in seconds) and sampling rate (fps) as input.
 		Smoothing Factor and colormap scale can be changed in the beginning of the script itself.
 		This script runs through the directory to look for any modified trajectory files so many experiments can be analyzed in one go.  
+
+
 		
-	b. subject_dist_from_grps - Distance of subject fish from each group. Averaged across frames. 
+	b. subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max)
+		
+		Calculates distance of subject fish from groups of fish. Plots some trajectories of fish within the defined ROI and saves values to excel. 
+
+		This script requires a variety of inputs. If no inputs are given, default inputs are taken. use [] to use default inputs for that variable
+		
+		eg usages; subject_dist_from_grps
+			   subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max)
+			   subject_dist_from_grps(fps, [], [], tbin, y_thresh_min, y_thresh_max)
+			   subject_dist_from_grps(fps, TMin, TMax, tbin, [], [])
+			   etc	
+		
+		Inputs:
+		fps - frames per second. Default : 30
+  		TMin - Minimum time (seconds). Default : First Frame in video
+  		TMax - Maximum time (seconds). Default : Last Frame in video
+  		tbin - bin data over specified time bin (seconds). Default : one frame
+  		y_thresh_min and y_thresh_max - ROI over which to analyze group behavior (in percent). Default : 0% (border closest to subject fish) to 25%
+		
+
+
+

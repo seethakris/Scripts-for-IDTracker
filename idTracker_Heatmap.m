@@ -2,9 +2,10 @@ function idTracker_Heatmap(tbin, fps)
 %% Get Directory from user and plot heat maps according to the specified time bin and fps
 %% - directory can contain one or more modified trajectories
 
-%% Input :
+%% Input : 
+%   using approx. 3.05 pixels/mm
 %   tbin - bin data over specified time bin and plot heatmaps for each
-%   fps - frames per second
+%   fps - frames per second. 
 
 %Optional changes
 

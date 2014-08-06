@@ -25,16 +25,16 @@ Scripts for analyzing trajectories.mat file from idTracker
 
 
 		
-	b. subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max)
+	b. subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject)
 		
 		Calculates distance of subject fish from groups of fish. Plots some trajectories of fish within the defined ROI and saves values to excel. 
 
-		This script requires a variety of inputs. If no inputs are given, default inputs are taken. use [] to use default inputs for that variable
+		This script requires a variety of inputs. If 0 inputs are given, default inputs are taken. use [] to use default inputs for some variable and user defined for others.
 		
 		eg usages; subject_dist_from_grps
-			   subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max)
-			   subject_dist_from_grps(fps, [], [], tbin, y_thresh_min, y_thresh_max)
-			   subject_dist_from_grps(fps, TMin, TMax, tbin, [], [])
+			   subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject)
+			   subject_dist_from_grps(fps, [], [], tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject)
+			   subject_dist_from_grps(fps, TMin, TMax, tbin, [], [],Num_fish_close_to_subject)
 			   etc	
 		
 		Inputs:
@@ -43,6 +43,7 @@ Scripts for analyzing trajectories.mat file from idTracker
   		TMax - Maximum time (seconds). Default : Last Frame in video
   		tbin - bin data over specified time bin (seconds). Default : one frame
   		y_thresh_min and y_thresh_max - ROI over which to analyze group behavior (in percent). Default : 0% (border closest to subject fish) to 25%
+		Num_fish_close_to_subject - the least number of fish that need to be near the subject to include that frame. Default - 3
 		
 
 

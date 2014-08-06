@@ -41,7 +41,7 @@ Scripts for analyzing trajectories.mat file from idTracker
 		fps - frames per second. Default : 30
   		TMin - Minimum time (seconds). Default : First Frame in video
   		TMax - Maximum time (seconds). Default : Last Frame in video
-  		tbin - bin data over specified time bin (seconds). Default : one frame
+  		tbin - bin data over specified time bin (seconds). Default : All frames
   		y_thresh_min and y_thresh_max - ROI over which to analyze group behavior (in percent). Default : 0% (border closest to subject fish) to 25%
 		Num_fish_close_to_subject - the least number of fish that need to be near the subject to include that frame. Default - 3
 		

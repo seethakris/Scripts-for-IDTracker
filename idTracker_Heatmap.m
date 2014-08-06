@@ -84,8 +84,10 @@ end
 function plot_heatmap(TimeSpent,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder, jj, frame_bin)
 
 %Plot Heatmaps - after smoothing
+resize_factor = 0.5;
+
 TimeSpent = TimeSpent(min_traj_X:max_traj_X+expandnum,min_traj_Y:max_traj_Y+expandnum);
-TimeSpent_resize = imresize(TimeSpent, 0.5, 'cubic');
+TimeSpent_resize = imresize(TimeSpent, resize_factor, 'cubic');
 Filt_TimeSpent = medfilt2(TimeSpent_resize, [smth smth]);
 
 fs1 = figure(1);
@@ -94,8 +96,13 @@ pcolor((Filt_TimeSpent./fps)')
 set(gca, 'TickDir','out', 'FontSize',12)
 set(gca, 'YDir', 'reverse');
 box off
-xlabel(gca,'x distance (pixels)', 'FontSize',12);
-ylabel(gca,'y distance (pixels)', 'FontSize',12);
+%Convert pixels to mm
+x = get(gca, 'Xtick');
+set(gca, 'xTickLabel',strread(int2str(x/(3.05*resize_factor)),'%s'));
+y = get(gca, 'Ytick');
+set(gca, 'yTickLabel',strread(int2str(y/(3.05*resize_factor)),'%s'));
+xlabel(gca,'x distance (mm)', 'FontSize',12);
+ylabel(gca,'y distance (mm)', 'FontSize',12);
 shading interp
 
 caxis([cmin cmax]) % Colorbar setting

@@ -9,7 +9,7 @@ warning off
 %% Input :
 %% Optional Inputs :
 % You can use [] to use default: Default values can be changed below as
-% indicated in the script. Using approx. 3.05 pixels/mm
+% indicated in the script.
 %
 %   fps - frames per second. Default - 30
 %   TMin - Minimum time (seconds). Default - First Frame in video
@@ -21,6 +21,8 @@ warning off
 %   to include that frame. Default - 3
 
 %% Check for inputs else use default values
+pixel_to_mm_change = 3.05; % Using approx. 3.05 pixels/mm
+
 
 % If user specified inputs, else default
 if exist('fps') && ~isempty(fps)
@@ -76,9 +78,11 @@ FileName = dir([PathName, filesep,'*modified*.mat']);
 % Find y threshold using data of all fish to find the most accurate boundary.
 grp_traj_X = [];
 grp_traj_Y = [];
-subject_traj_X = [];
-subject_traj_Y = [];
+sub_traj_X = [];
+sub_traj_Y = [];
 
+grp1_traj_X = [];
+grp2_traj_X = [];
 
 for ii = 1:length(FileName)
     % Load trajectories
@@ -89,13 +93,22 @@ for ii = 1:length(FileName)
         reshape(traj.grp2_XY_mod(:,:,1),size(traj.grp2_XY_mod,1)*size(traj.grp2_XY_mod,2),1)];
     grp_traj_Y = [grp_traj_Y; reshape(traj.grp1_XY_mod(:,:,2),size(traj.grp1_XY_mod,1)*size(traj.grp1_XY_mod,2),1); ...
         reshape(traj.grp2_XY_mod(:,:,2),size(traj.grp2_XY_mod,1)*size(traj.grp2_XY_mod,2),1)];
+    
+    grp1_traj_X = [grp1_traj_X; reshape(traj.grp1_XY_mod(:,:,1),size(traj.grp1_XY_mod,1)*size(traj.grp1_XY_mod,2),1)];
+    grp2_traj_X = [grp2_traj_X; reshape(traj.grp2_XY_mod(:,:,1),size(traj.grp2_XY_mod,1)*size(traj.grp2_XY_mod,2),1)];
+    
+    sub_traj_X = [sub_traj_X; traj.subject_XY_mod(:,1,1)];
+    sub_traj_Y = [sub_traj_Y; traj.subject_XY_mod(:,1,2)];
 end
 
 % Find y min and y max using the grp trajectories
-coordinates_y_grp(1) = [min(grp_traj_Y) + (max(grp_traj_Y)-min(grp_traj_Y))*(Minimum_ythresh/100)];
-coordinates_y_grp(2) = [min(grp_traj_Y) + (max(grp_traj_Y)-min(grp_traj_Y))*(Maximum_ythresh/100)];
+coordinates_y_grp(1) = min(grp_traj_Y) + (max(grp_traj_Y)-min(grp_traj_Y))*(Minimum_ythresh/100);
+coordinates_y_grp(2) = min(grp_traj_Y) + (max(grp_traj_Y)-min(grp_traj_Y))*(Maximum_ythresh/100);
 
-clear grp_traj_X grp_traj_Y traj
+coordinates_X_sub = (max(grp1_traj_X)+min(grp2_traj_X))/2;
+coordinates_Y_sub = (max(sub_traj_Y)+min(sub_traj_Y))/2;
+
+clear grp_traj_X grp_traj_Y traj grp1_traj_X grp2_traj_X sub_traj_X sub_traj_Y
 
 for ii = 1:length(FileName)
     
@@ -126,52 +139,161 @@ for ii = 1:length(FileName)
     
     % Find frames where groups of fish (2 or more) are within the ROI
     if frame_bin == 1
-        get_frames_within_ROI(traj, FirstFrame, LastFrame,Frames_per_sec,coordinates_y_grp,Num_fish_close_to_subject, ...
-            Result_Folder_excel,Result_Folder_figures,Result_Folder_matfiles,Inputs_provided);
+        
+        [Distance] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp,...
+            coordinates_X_sub,coordinates_Y_sub,Num_fish_close_to_subject,pixel_to_mm_change);
+        
+        % Save Files
+        % Get a name file using all inputs to create unique files for each input
+        name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+        
+        % 1. As a matfile
+        save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
+        
+        % 2. As a figure
+        %Save trajectories figure
+        [fs1] = plot_trajectories(traj,Distance);
+        name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+        
+        set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
+        saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
+        
+        %Save distance we had between subject and groups
+        [fs2] = plot_distance_sub_grp(Distance);
+        name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+        
+        set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
+        saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
+        
+        % 3. As a excel file
+        name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+        
+        save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel);
         
     else
+        
+        
         for jj = FirstFrame:frame_bin:LastFrame %If the user requires binning of time
-            get_frames_within_ROI(traj, jj, jj+frame_bin,Frames_per_sec,coordinates_y_grp,Num_fish_close_to_subject,...
-                Result_Folder_excel,Result_Folder_figures,Result_Folder_matfiles, Inputs_provided);
+            
+            [Distance] = get_frames_within_ROI(traj, jj, jj+frame_bin,coordinates_y_grp,...
+                coordinates_X_sub, coordinates_Y_sub, Num_fish_close_to_subject,pixel_to_mm_change);
+            
+            % Save files
+            % 1. As a matfile
+            %Get a name file using all inputs to create unique files for each input
+            name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+                '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            
+            save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
+            
+            % 2. As a figure
+            %Save trajectories figure
+            [fs1] = plot_trajectories(traj,Distance);
+            name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+                '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            
+            set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
+            saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
+            
+            
+            %Save distance we had between subject and groups
+            [fs2] = plot_distance_sub_grp(Distance);
+            name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+                '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            
+            set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
+            saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
+            
         end
     end
     
 end
 end
 
+
+
+
 %% Function to find frames where groups of fish are within user given ROI
-function get_frames_within_ROI(traj, FirstFrame, LastFrame,Frames_per_sec,coordinates_y_grp,Num_fish,...
-    Result_Folder_excel,Result_Folder_figures,Result_Folder_matfiles,Inputs_provided)
+function [Distance] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change)
 
 close all
 
 %Group 1
+% 1. Find frames and x,y position where groups of fish were within specified ROI
 Data_grpy = traj.grp1_XY_mod(FirstFrame:LastFrame,:,2);
 Data_grp1 = traj.grp1_XY_mod(FirstFrame:LastFrame,:,:);
-Frames_grp1 = find((sum(Data_grpy>coordinates_y_grp(1)&Data_grpy<coordinates_y_grp(2),2)>=Num_fish)==1); %Find frames where atleast two fish are within ROI
+Frames_grp1 = find((sum(Data_grpy>coordinates_y_grp(1)&Data_grpy<coordinates_y_grp(2),2)>=Num_fish)==1);
 Frames_grp1_pos = Data_grp1(Frames_grp1,:,:);
 
+% 2. Get distances from corresponding frames in the subject
 Data_subj = traj.subject_XY_mod(FirstFrame:LastFrame,:,:);
-Frames_subject_grp1_pos = Data_subj(Frames_grp1,:,:); % Get distances from corresponding frames in the subject
+Frames_subject_grp1_pos = Data_subj(Frames_grp1,:,:);
 
-Centre_mass_grp1 = squeeze(median(Frames_grp1_pos,2)); %Centre of mass of group1
+% 3. Get center of mass by taking median of x,y positions of group
+Centre_mass_grp1 = squeeze(median(Frames_grp1_pos,2));
+
+% 4.Take euclidean distances between centre of mass of group and subject
 Dist_subject_from_grp1_pos = sqrt((squeeze(Frames_subject_grp1_pos(:,1,1))-Centre_mass_grp1(:,1)).^2 + ...
-    (squeeze(Frames_subject_grp1_pos(:,1,2))-Centre_mass_grp1(:,2)).^2 ); %Take equilidean distance of centre of mass of group and subject
-Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos/3.05;
+    (squeeze(Frames_subject_grp1_pos(:,1,2))-Centre_mass_grp1(:,2)).^2 );
 
+% 5. Convert pixels to mm
+Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos/pixel_to_mm_change;
+
+% 6. Find quadrants where the subjects are located. There are 4 quadrants.
+Quadrant_subject_grp1_pos = zeros(size(Frames_subject_grp1_pos,1),1);
+
+Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)<coordinates_X_sub & Frames_subject_grp1_pos(:,2)>coordinates_Y_sub) = 1; %Group1 close
+Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)>coordinates_X_sub & Frames_subject_grp1_pos(:,2)>coordinates_Y_sub) = 2; %Group2 close
+
+Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)<coordinates_X_sub & Frames_subject_grp1_pos(:,2)<coordinates_Y_sub) = 3; %Group1 far
+Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)>coordinates_X_sub & Frames_subject_grp1_pos(:,2)<coordinates_Y_sub) = 4; %Group2 far
 
 % Group2
+% 1. Find frames and x,y position where groups of fish were within specified ROI
 Data_grpy = traj.grp2_XY_mod(FirstFrame:LastFrame,:,2);
 Data_grp2 = traj.grp2_XY_mod(FirstFrame:LastFrame,:,:);
-Frames_grp2 = find((sum(Data_grpy>coordinates_y_grp(1)&Data_grpy<coordinates_y_grp(2),2)>=Num_fish)==1); %Find frames where atleast two fish are within ROI
+Frames_grp2 = find((sum(Data_grpy>coordinates_y_grp(1)&Data_grpy<coordinates_y_grp(2),2)>=Num_fish)==1);
 Frames_grp2_pos = Data_grp2(Frames_grp2,:,:);
 
-Frames_subject_grp2_pos = Data_subj(Frames_grp2,:,:); % Get distances from corresponding frames in the subject
+% 2. Get distances from corresponding frames in the subject
+Frames_subject_grp2_pos = Data_subj(Frames_grp2,:,:);
 
-Centre_mass_grp2 = squeeze(median(Frames_grp2_pos,2)); %Centre of mass of group2
+% 3. Get center of mass by taking median of x,y positions of group
+Centre_mass_grp2 = squeeze(median(Frames_grp2_pos,2));
+
+% 4.Take euclidean distances between centre of mass of group and subject
 Dist_subject_from_grp2_pos = sqrt((squeeze(Frames_subject_grp2_pos(:,1,1))-Centre_mass_grp2(:,1)).^2 + ...
-    (squeeze(Frames_subject_grp2_pos(:,1,2))-Centre_mass_grp2(:,2)).^2 ); %Take equilidean distance of centre of mass of group and subject
-Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos/3.05;
+    (squeeze(Frames_subject_grp2_pos(:,1,2))-Centre_mass_grp2(:,2)).^2 );
+
+% 5. Convert pixels to mm
+Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos/pixel_to_mm_change;
+
+
+% 6. Find quadrants where the subjects are located. There are 4 quadrants.
+Quadrant_subject_grp2_pos = zeros(size(Frames_subject_grp2_pos,1),1);
+
+Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)<coordinates_X_sub & Frames_subject_grp2_pos(:,2)>coordinates_Y_sub) = 1; %Group1 close
+Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)>coordinates_X_sub & Frames_subject_grp2_pos(:,2)>coordinates_Y_sub) = 2; %Group2 close
+
+Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)<coordinates_X_sub & Frames_subject_grp2_pos(:,2)<coordinates_Y_sub) = 3; %Group1 far
+Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)>coordinates_X_sub & Frames_subject_grp2_pos(:,2)<coordinates_Y_sub) = 4; %Group2 far
+
+
+% 7. Find frames where both groups are at the ROI
+Frames_both_grp1 = ismember(Frames_grp1, Frames_grp2); %0-only group1, 1-both group1 and 2
+Frames_both_grp2 = ismember(Frames_grp2, Frames_grp1); %0-only group2, 1-both group1 and 2
+
+
 
 
 %% Save as Matfile
@@ -181,6 +303,8 @@ Distance.Frames_subject_grp1_pos = Frames_subject_grp1_pos;
 Distance.Centre_mass_grp1 = Centre_mass_grp1;
 Distance.Dist_subject_from_grp1_pos = Dist_subject_from_grp1_pos;
 Distance.Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos_mm;
+Distance.Frames_both_grp1 = Frames_both_grp1;
+Distance.Quadrant_subject_grp1_pos = Quadrant_subject_grp1_pos;
 
 Distance.Frames_grp2 = Frames_grp2;
 Distance.Frames_grp2_pos = Frames_grp2_pos;
@@ -188,39 +312,60 @@ Distance.Frames_subject_grp2_pos = Frames_subject_grp2_pos;
 Distance.Centre_mass_grp2 = Centre_mass_grp2;
 Distance.Dist_subject_from_grp2_pos = Dist_subject_from_grp2_pos;
 Distance.Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos_mm;
+Distance.Frames_both_grp2 = Frames_both_grp2;
+Distance.Quadrant_subject_grp2_pos = Quadrant_subject_grp2_pos;
 
-%Get a name file using all inputs to create unique files for each input
-name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
-    '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+end
 
-save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
 
-clear Distance
 %% Save as Excel
+function save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel)
+
+% Save distances with names suitable for excel files
+
+Distance.Frames_group1 = Distance.Frames_grp1;
+Distance.Centre_mass_group1_mm = Centre_mass_grp1/pixel_to_mm_change;
+Distance.Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos_mm;
+Distance.Frames_both_grp1 = Frames_both_grp1;
 
 
+Distance.Frames_grp2 = Frames_grp2;
+Distance.Frames_grp2_pos = Frames_grp2_pos;
+Distance.Frames_subject_grp2_pos = Frames_subject_grp2_pos;
+Distance.Centre_mass_grp2 = Centre_mass_grp2;
+Distance.Dist_subject_from_grp2_pos = Dist_subject_from_grp2_pos;
+Distance.Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos_mm;
+Distance.Frames_both_grp2 = Frames_both_grp2;
+
+end
 
 %% Plotting:
-% 1. Plot trajectories in chosen frames for user and save as
-% Plot_Thresholded_Positions in Figures folder
+function [fs1] = plot_trajectories(traj, Distance)
+
+% Plot trajectories in chosen frames for user and save as
+% Thresholded_Positions Distance_sub_grp and in Figures folder
+
 fs1 = figure(1);
 set(fs1,'color','white')
 hold on
-plot(squeeze(Frames_grp1_pos(:,:,1)), squeeze(Frames_grp1_pos(:,:,2)),'.')
-plot(Centre_mass_grp1(:,1), Centre_mass_grp1(:,2), 'k+', 'MarkerSize', 10)
-plot(squeeze(Frames_grp2_pos(:,:,1)), squeeze(Frames_grp2_pos(:,:,2)),'*')
-plot(Centre_mass_grp2(:,1), Centre_mass_grp2(:,2), 'k+', 'MarkerSize', 10)
-plot(squeeze(Frames_subject_grp1_pos(:,:,1)), squeeze(Frames_subject_grp1_pos(:,:,2)),'r.', 'MarkerSize', 10)
-plot(squeeze(Frames_subject_grp2_pos(:,:,1)), squeeze(Frames_subject_grp2_pos(:,:,2)),'g*')
+
+plot(squeeze(Distance.Frames_grp1_pos(:,:,1)), squeeze(Distance.Frames_grp1_pos(:,:,2)),'.')
+plot(Distance.Centre_mass_grp1(:,1), Distance.Centre_mass_grp1(:,2), 'k+', 'MarkerSize', 10)
+plot(squeeze(Distance.Frames_grp2_pos(:,:,1)), squeeze(Distance.Frames_grp2_pos(:,:,2)),'*')
+plot(Distance.Centre_mass_grp2(:,1), Distance.Centre_mass_grp2(:,2), 'k+', 'MarkerSize', 10)
+plot(squeeze(Distance.Frames_subject_grp1_pos(:,:,1)), squeeze(Distance.Frames_subject_grp1_pos(:,:,2)),'r.', 'MarkerSize', 10)
+plot(squeeze(Distance.Frames_subject_grp2_pos(:,:,1)), squeeze(Distance.Frames_subject_grp2_pos(:,:,2)),'g*')
+
 hold off
 set(gca, 'TickDir','out', 'FontSize',12)
 set(gca, 'YDir', 'reverse');
 box off
+
 %Convert to mm
 x = get(gca, 'Xtick');
-set(gca, 'xTickLabel',strread(int2str(x/3.05),'%s'));
+set(gca, 'xTickLabel',strread(int2str(x/pixel_to_mm_change),'%s'));
 y = get(gca, 'Ytick');
-set(gca, 'yTickLabel',strread(int2str(y/3.05),'%s'));
+set(gca, 'yTickLabel',strread(int2str(y/pixel_to_mm_change),'%s'));
 xlabel(gca,'x distance (mm)', 'FontSize',12);
 ylabel(gca,'y distance (mm)', 'FontSize',12);
 title(gca, 'Positions of fish in selected ROI')
@@ -242,22 +387,20 @@ legend_str1{size(traj.grp1_XY_mod, 2)+size(traj.grp2_XY_mod, 2)+4} = 'Subject an
 
 legend(legend_str1{:});
 
-%Save figure
-name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
-    '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-    '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+end
 
-set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
-saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
 
+
+function [fs2] = plot_distance_sub_grp(Distance)
 % 2. Plot distance from centre of mass of groups and subject for selected
 % frames
-fs1 = figure(2);
-set(fs1,'color','white')
+
+fs2 = figure(2);
+set(fs2,'color','white')
 subplot(2,1,1)
-plot(Frames_grp1, Dist_subject_from_grp1_pos_mm, 'r.')
+plot(Distance.Frames_grp1, Distance.Dist_subject_from_grp1_pos_mm, 'r.')
 hold on
-plot(Frames_grp2, Dist_subject_from_grp2_pos_mm, 'g.')
+plot(Distance.Frames_grp2, Distance.Dist_subject_from_grp2_pos_mm, 'g.')
 hold off
 
 set(gca, 'TickDir','out', 'FontSize',12)
@@ -269,10 +412,10 @@ title(gca, 'Distance of subject from groups of fish', 'FontSize',12)
 legend('Subject and Group1', 'Subject and Group2');
 
 subplot(2,1,2)
-[mean1, ci1] = normfit(Dist_subject_from_grp1_pos_mm);
+[mean1, ci1] = normfit(Distance.Dist_subject_from_grp1_pos_mm);
 errorbar(1,mean1,ci1,'r')
 hold on
-[mean2, ci2] = normfit(Dist_subject_from_grp2_pos_mm);
+[mean2, ci2] = normfit(Distance.Dist_subject_from_grp2_pos_mm);
 errorbar(2,mean2,ci2,'g')
 hold off
 
@@ -284,12 +427,6 @@ title(gca, 'Distance of subject from groups of fish', 'FontSize',12)
 
 legend('Subject and Group1', 'Subject and Group2');
 
-%Save figure
-name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
-    '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-    '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
-
-set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
-saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
-
 end
+
+

@@ -214,6 +214,13 @@ for ii = 1:length(FileName)
             set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
             saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
             
+            % 3. As a excel file
+            name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+                '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            
+            save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel);
+            
         end
     end
     
@@ -348,10 +355,10 @@ count = 0;
 for kk = 1:length(Temp_Dat)
     if kk == group1_matrices+1
         count = count+3;
-    else 
+    else
         count = count+1;
     end
-      
+    
     Xls_Dat{1,count} = Temp_Dat{kk};
     for ii = 1:size(Distance1.(Temp_Dat{kk}),1)
         temp1 = Distance1.(Temp_Dat{kk})(ii);

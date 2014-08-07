@@ -45,6 +45,16 @@ Scripts for analyzing trajectories.mat file from idTracker
   		y_thresh_min and y_thresh_max - ROI over which to analyze group behavior (in percent). Default : 0% (border closest to subject fish) to 25%
 		Num_fish_close_to_subject - the least number of fish that need to be near the subject to include that frame. Default - 3
 		
+		Outputs in the excel file: separated for group1 vs group2 
 
+		Group_frames : frame numbers where groups of fish were near the subject
+		Group_centre_mass_mm : centre of mass (median of coordinates) of all the fish when that happened.
+		Group_subjectdist_mm : distance of the position of the subject from this centre of mass
+		Group1_and_group2_frames or Group2_and_group1_frames : Frames where Group1 and Group2 fish were both closer to subject are numbered 1 and otherwise 0. 
+		Group_subject_quadrant : Frames are numbered according to where the subject was with respect to group1 fish. 
+						1. closer to Group1
+						2. closer to Group2
+						3. farther from Group1
+						4. farther from Group2
 
 

@@ -153,7 +153,7 @@ for ii = 1:length(FileName)
         
         % 2. As a figure
         %Save trajectories figure
-        [fs1] = plot_trajectories(traj,Distance);
+        [fs1] = plot_trajectories(traj,Distance,pixel_to_mm_change);
         name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
@@ -162,7 +162,7 @@ for ii = 1:length(FileName)
         saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
         
         %Save distance we had between subject and groups
-        [fs2] = plot_distance_sub_grp(Distance);
+        [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
         name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
@@ -196,7 +196,7 @@ for ii = 1:length(FileName)
             
             % 2. As a figure
             %Save trajectories figure
-            [fs1] = plot_trajectories(traj,Distance);
+            [fs1] = plot_trajectories(traj,Distance,pixel_to_mm_change);
             name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
@@ -206,7 +206,7 @@ for ii = 1:length(FileName)
             
             
             %Save distance we had between subject and groups
-            [fs2] = plot_distance_sub_grp(Distance);
+            [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
             name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
@@ -323,24 +323,67 @@ function save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_ex
 
 % Save distances with names suitable for excel files
 
-Distance.Frames_group1 = Distance.Frames_grp1;
-Distance.Centre_mass_group1_mm = Centre_mass_grp1/pixel_to_mm_change;
-Distance.Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos_mm;
-Distance.Frames_both_grp1 = Frames_both_grp1;
+Distance1.Group1_frames = Distance.Frames_grp1;
+Distance1.Group1_centre_mass_mm = Distance.Centre_mass_grp1/pixel_to_mm_change;
+Distance1.Group1_subjectdist_mm = Distance.Dist_subject_from_grp1_pos_mm;
+Distance1.Group1_and_group2_frames = Distance.Frames_both_grp1;
+Distance1.Group1_subject_quadrant = Distance.Quadrant_subject_grp1_pos;
 
+group1_matrices = 5; % to know how many Group2 vs Group1 quantifications - provide a gap while saving in excel
 
-Distance.Frames_grp2 = Frames_grp2;
-Distance.Frames_grp2_pos = Frames_grp2_pos;
-Distance.Frames_subject_grp2_pos = Frames_subject_grp2_pos;
-Distance.Centre_mass_grp2 = Centre_mass_grp2;
-Distance.Dist_subject_from_grp2_pos = Dist_subject_from_grp2_pos;
-Distance.Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos_mm;
-Distance.Frames_both_grp2 = Frames_both_grp2;
+Distance1.Group2_frames = Distance.Frames_grp2;
+Distance1.Group2_centre_mass_mm = Distance.Centre_mass_grp2/pixel_to_mm_change;
+Distance1.Group2_subjectdist_mm = Distance.Dist_subject_from_grp2_pos_mm;
+Distance1.Group2_and_group1_frames = Distance.Frames_both_grp2;
+Distance1.Group2_subject_quadrant = Distance.Quadrant_subject_grp2_pos;
+
+clear Distance
+
+Temp_Dat = fieldnames(Distance1);
+filename = [ Result_Folder_excel,filesep,name_file,'.xls'];
+fid = fopen(filename, 'w+');
+
+% Go through and save as a cell in a format suitable for excel files
+count = 0;
+for kk = 1:length(Temp_Dat)
+    if kk == group1_matrices+1
+        count = count+3;
+    else 
+        count = count+1;
+    end
+      
+    Xls_Dat{1,count} = Temp_Dat{kk};
+    for ii = 1:size(Distance1.(Temp_Dat{kk}),1)
+        temp1 = Distance1.(Temp_Dat{kk})(ii);
+        if temp1 ~= 0
+            Xls_Dat{ii+1,count} = temp1;
+        else
+            Xls_Dat{ii+1,count} = 0;
+        end
+    end
+    
+end
+
+%Save the cell as excel
+fid = fopen(filename, 'a');
+[nrows,ncols]= size(Xls_Dat);
+
+for row = 1:nrows
+    for col = 1:ncols
+        if row == 1
+            fprintf(fid, '%s\t', Xls_Dat{row,col});
+        else
+            fprintf(fid, '%4.2f\t', Xls_Dat{row,col});
+        end
+    end
+    fprintf(fid, '\n');
+end
+
 
 end
 
 %% Plotting:
-function [fs1] = plot_trajectories(traj, Distance)
+function [fs1] = plot_trajectories(traj, Distance,pixel_to_mm_change)
 
 % Plot trajectories in chosen frames for user and save as
 % Thresholded_Positions Distance_sub_grp and in Figures folder
@@ -391,7 +434,7 @@ end
 
 
 
-function [fs2] = plot_distance_sub_grp(Distance)
+function [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change)
 % 2. Plot distance from centre of mass of groups and subject for selected
 % frames
 

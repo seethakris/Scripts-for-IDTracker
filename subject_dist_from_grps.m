@@ -154,7 +154,7 @@ Frames_grp1_pos = Data_grp1(Frames_grp1,:,:);
 Data_subj = traj.subject_XY_mod(FirstFrame:LastFrame,:,:);
 Frames_subject_grp1_pos = Data_subj(Frames_grp1,:,:); % Get distances from corresponding frames in the subject
 
-Centre_mass_grp1 = squeeze(mean(Frames_grp1_pos,2)); %Centre of mass of group1
+Centre_mass_grp1 = squeeze(median(Frames_grp1_pos,2)); %Centre of mass of group1
 Dist_subject_from_grp1_pos = sqrt((squeeze(Frames_subject_grp1_pos(:,1,1))-Centre_mass_grp1(:,1)).^2 + ...
     (squeeze(Frames_subject_grp1_pos(:,1,2))-Centre_mass_grp1(:,2)).^2 ); %Take equilidean distance of centre of mass of group and subject
 Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos/3.05;
@@ -168,7 +168,7 @@ Frames_grp2_pos = Data_grp2(Frames_grp2,:,:);
 
 Frames_subject_grp2_pos = Data_subj(Frames_grp2,:,:); % Get distances from corresponding frames in the subject
 
-Centre_mass_grp2 = squeeze(mean(Frames_grp2_pos,2)); %Centre of mass of group2
+Centre_mass_grp2 = squeeze(median(Frames_grp2_pos,2)); %Centre of mass of group2
 Dist_subject_from_grp2_pos = sqrt((squeeze(Frames_subject_grp2_pos(:,1,1))-Centre_mass_grp2(:,1)).^2 + ...
     (squeeze(Frames_subject_grp2_pos(:,1,2))-Centre_mass_grp2(:,2)).^2 ); %Take equilidean distance of centre of mass of group and subject
 Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos/3.05;
@@ -195,7 +195,7 @@ name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec))
 
 save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
 
-clear Distance 
+clear Distance
 %% Save as Excel
 
 
@@ -243,7 +243,7 @@ legend_str1{size(traj.grp1_XY_mod, 2)+size(traj.grp2_XY_mod, 2)+4} = 'Subject an
 legend(legend_str1{:});
 
 %Save figure
-name_file = ['Plot_Thresholded_Positions_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
     '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
     '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
 

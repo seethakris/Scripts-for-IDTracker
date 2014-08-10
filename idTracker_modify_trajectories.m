@@ -22,9 +22,10 @@ All_fish = 1:numFish;
 %% Check if trajectories.mat ahs a field called fish number, else ask theuser and save it
 
 if exist([PathName,FileName(1:end-4),'_FishNumber.mat'])
-    grp1_fish = Traj.FishNumber.grp1;
-    grp2_fish = Traj.FishNumber.grp2;
-    subject_fish = Traj.FishNumber.subject;
+    load([PathName,FileName(1:end-4),'_FishNumber.mat'],'FishNumber');
+    grp1_fish = FishNumber.grp1;
+    grp2_fish = FishNumber.grp2;
+    subject_fish = FishNumber.subject;
     disp(sprintf(['Grp1 Fish: ', num2str(grp1_fish), '\nGrp2 Fish: ', num2str(grp2_fish),'\nSubject fish: ', num2str(subject_fish)]));
     
 else
@@ -77,9 +78,9 @@ subject_XY = Traj.trajectories(:,subject_fish,:);
 
 %Approximate area that should be occupied by groups of fish.
 %[xleft,xright,ytop,ybottom];
-Group1_area =[150, 650, 950, 450];
-Group2_area =[650, 1150, 950, 450];
-Subject_area =[150, 1150, 450, 200];
+Group1_area =[90, 310,  280, 50];
+Group2_area =[310, 580, 280, 50];
+Subject_area =[90, 580, 390, 290];
 
 
 % Remove any misidentification in trajectory by finding big jumps
@@ -100,6 +101,3 @@ fs = figure(2);
 print('-djpeg', [Result_Folder, 'Trajectories After correction.jpeg']);
 
 save([PathName,FileName(1:end-4), '_modified_trajectories.mat'], 'grp1_XY_mod', 'grp2_XY_mod', 'subject_XY_mod');
-
-
-

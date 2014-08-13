@@ -11,7 +11,7 @@ function idTracker_Heatmap(tbin, fps)
 
 %Colorbar scaling
 cmin = 0;
-cmax = 0.1;
+cmax = 0.2;
 
 %Smoothing factor
 smth = 10;
@@ -129,6 +129,9 @@ function [TimeSpent] = find_mean_time(X,Y,TimeSpent,expandnum)
 NumFish = size(X,2);
 temp_TimeSpent = zeros(size(TimeSpent,1),size(TimeSpent,2), NumFish);
 
+if NumFish==0
+    return
+end
 
 for ii = 1:NumFish
     

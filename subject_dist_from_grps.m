@@ -175,7 +175,7 @@ for ii = 1:length(FileName)
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
         
-        save_as_excel(Distance,Quadrant_Stats, pixel_to_mm_change, name_file, Result_Folder_excel);
+        save_as_excel(Distance,Quadrant_Stats, name_file, Result_Folder_excel);
         
     else
         
@@ -219,7 +219,7 @@ for ii = 1:length(FileName)
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
             
-            save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel);
+            save_as_excel(Distance,Quadrant_Stats, name_file, Result_Folder_excel);
             
         end
     end
@@ -348,7 +348,7 @@ end
 
 
 %% Save as Excel
-function save_as_excel(Distance, Quadrant_Stats, pixel_to_mm_change, name_file, Result_Folder_excel)
+function save_as_excel(Distance, Quadrant_Stats, name_file, Result_Folder_excel)
 
 % 1. First save distances with names suitable for excel files
 

@@ -140,7 +140,7 @@ for ii = 1:length(FileName)
     % Find frames where groups of fish (2 or more) are within the ROI
     if frame_bin == 1
         
-        [Distance] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp,...
+        [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp,...
             coordinates_X_sub,coordinates_Y_sub,Num_fish_close_to_subject,pixel_to_mm_change);
         
         % Save Files
@@ -149,7 +149,7 @@ for ii = 1:length(FileName)
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
         
         % 1. As a matfile
-        save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
+        save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Quadrant_Stats', 'Inputs_provided');
         
         % 2. As a figure
         %Save trajectories figure
@@ -175,14 +175,14 @@ for ii = 1:length(FileName)
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
         
-        save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel);
+        save_as_excel(Distance,Quadrant_Stats, pixel_to_mm_change, name_file, Result_Folder_excel);
         
     else
         
         
         for jj = FirstFrame:frame_bin:LastFrame %If the user requires binning of time
             
-            [Distance] = get_frames_within_ROI(traj, jj, jj+frame_bin,coordinates_y_grp,...
+            [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, jj, jj+frame_bin,coordinates_y_grp,...
                 coordinates_X_sub, coordinates_Y_sub, Num_fish_close_to_subject,pixel_to_mm_change);
             
             % Save files
@@ -231,7 +231,7 @@ end
 
 
 %% Function to find frames where groups of fish are within user given ROI
-function [Distance] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change)
+function [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change)
 
 close all
 
@@ -255,6 +255,7 @@ Dist_subject_from_grp1_pos = sqrt((squeeze(Frames_subject_grp1_pos(:,1,1))-Centr
 
 % 5. Convert pixels to mm
 Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos/pixel_to_mm_change;
+Centre_mass_grp1_mm = Centre_mass_grp1/pixel_to_mm_change;
 
 % 6. Find quadrants where the subjects are located. There are 4 quadrants.
 Quadrant_subject_grp1_pos = zeros(size(Frames_subject_grp1_pos,1),1);
@@ -284,6 +285,7 @@ Dist_subject_from_grp2_pos = sqrt((squeeze(Frames_subject_grp2_pos(:,1,1))-Centr
 
 % 5. Convert pixels to mm
 Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos/pixel_to_mm_change;
+Centre_mass_grp2_mm = Centre_mass_grp2/pixel_to_mm_change;
 
 
 % 6. Find quadrants where the subjects are located. There are 4 quadrants.
@@ -301,13 +303,24 @@ Frames_both_grp1 = ismember(Frames_grp1, Frames_grp2); %0-only group1, 1-both gr
 Frames_both_grp2 = ismember(Frames_grp2, Frames_grp1); %0-only group2, 1-both group1 and 2
 
 
-
+%8. Seperate stats based on Quadrant
+for ii = 1:4
+    Quadrant_num(ii,1) = ii;
+    Quadrant_count_grp1(ii,1) = size(find(Quadrant_subject_grp1_pos==ii),1);
+    Quadrant_Centremass_grp1(ii,1) = mean(Centre_mass_grp1(Quadrant_subject_grp1_pos==ii)/pixel_to_mm_change);
+    Quadrant_subdist_grp1(ii,1) = mean(Dist_subject_from_grp1_pos_mm(Quadrant_subject_grp1_pos==ii));
+    
+    Quadrant_count_grp2(ii,1) = size(find(Quadrant_subject_grp2_pos==ii),1);
+    Quadrant_Centremass_grp2(ii,1) = mean(Centre_mass_grp2(Quadrant_subject_grp2_pos==ii)/pixel_to_mm_change);
+    Quadrant_subdist_grp2(ii,1) = mean(Dist_subject_from_grp2_pos_mm(Quadrant_subject_grp2_pos==ii));
+end
 
 %% Save as Matfile
 Distance.Frames_grp1 = Frames_grp1;
 Distance.Frames_grp1_pos = Frames_grp1_pos;
 Distance.Frames_subject_grp1_pos = Frames_subject_grp1_pos;
 Distance.Centre_mass_grp1 = Centre_mass_grp1;
+Distance.Centre_mass_grp1_mm = Centre_mass_grp1_mm;
 Distance.Dist_subject_from_grp1_pos = Dist_subject_from_grp1_pos;
 Distance.Dist_subject_from_grp1_pos_mm = Dist_subject_from_grp1_pos_mm;
 Distance.Frames_both_grp1 = Frames_both_grp1;
@@ -317,21 +330,30 @@ Distance.Frames_grp2 = Frames_grp2;
 Distance.Frames_grp2_pos = Frames_grp2_pos;
 Distance.Frames_subject_grp2_pos = Frames_subject_grp2_pos;
 Distance.Centre_mass_grp2 = Centre_mass_grp2;
+Distance.Centre_mass_grp2_mm = Centre_mass_grp2_mm;
 Distance.Dist_subject_from_grp2_pos = Dist_subject_from_grp2_pos;
 Distance.Dist_subject_from_grp2_pos_mm = Dist_subject_from_grp2_pos_mm;
 Distance.Frames_both_grp2 = Frames_both_grp2;
 Distance.Quadrant_subject_grp2_pos = Quadrant_subject_grp2_pos;
 
+Quadrant_Stats.Quadrant_num = Quadrant_num;
+Quadrant_Stats.Quadrant_count_grp1 = Quadrant_count_grp1;
+Quadrant_Stats.Quadrant_Centremass_grp1 = Quadrant_Centremass_grp1;
+Quadrant_Stats.Quadrant_subdist_grp1 = Quadrant_subdist_grp1;
+Quadrant_Stats.Quadrant_count_grp2 = Quadrant_count_grp2;
+Quadrant_Stats.Quadrant_Centremass_grp2 = Quadrant_Centremass_grp2;
+Quadrant_Stats.Quadrant_subdist_grp2 = Quadrant_subdist_grp2;
+
 end
 
 
 %% Save as Excel
-function save_as_excel(Distance, pixel_to_mm_change, name_file, Result_Folder_excel)
+function save_as_excel(Distance, Quadrant_Stats, pixel_to_mm_change, name_file, Result_Folder_excel)
 
-% Save distances with names suitable for excel files
+% 1. First save distances with names suitable for excel files
 
 Distance1.Group1_frames = Distance.Frames_grp1;
-Distance1.Group1_centre_mass_mm = Distance.Centre_mass_grp1/pixel_to_mm_change;
+Distance1.Group1_centre_mass_mm = Distance.Centre_mass_grp1_mm;
 Distance1.Group1_subjectdist_mm = Distance.Dist_subject_from_grp1_pos_mm;
 Distance1.Group1_and_group2_frames = Distance.Frames_both_grp1;
 Distance1.Group1_subject_quadrant = Distance.Quadrant_subject_grp1_pos;
@@ -339,12 +361,24 @@ Distance1.Group1_subject_quadrant = Distance.Quadrant_subject_grp1_pos;
 group1_matrices = 5; % to know how many Group2 vs Group1 quantifications - provide a gap while saving in excel
 
 Distance1.Group2_frames = Distance.Frames_grp2;
-Distance1.Group2_centre_mass_mm = Distance.Centre_mass_grp2/pixel_to_mm_change;
+Distance1.Group2_centre_mass_mm = Distance.Centre_mass_grp2_mm;
 Distance1.Group2_subjectdist_mm = Distance.Dist_subject_from_grp2_pos_mm;
 Distance1.Group2_and_group1_frames = Distance.Frames_both_grp2;
 Distance1.Group2_subject_quadrant = Distance.Quadrant_subject_grp2_pos;
 
-clear Distance
+group_matrices = 10; % to know how many group quantifications - provide a gap while saving in excel
+
+Distance1.Quadrant = Quadrant_Stats.Quadrant_num;
+Distance1.Count_grp1 = Quadrant_Stats.Quadrant_count_grp1;
+Distance1.Centremass_grp1 = Quadrant_Stats.Quadrant_Centremass_grp1;
+Distance1.Subdist_grp1 = Quadrant_Stats.Quadrant_subdist_grp1;
+
+
+Distance1.Count_grp2 = Quadrant_Stats.Quadrant_count_grp2;
+Distance1.Centremass_grp2 = Quadrant_Stats.Quadrant_Centremass_grp2;
+Distance1.Subdist_grp2 = Quadrant_Stats.Quadrant_subdist_grp2;
+
+clear Distance Quadrant_Stats
 
 Temp_Dat = fieldnames(Distance1);
 filename = [ Result_Folder_excel,filesep,name_file,'.xls'];
@@ -353,7 +387,7 @@ fid = fopen(filename, 'w+');
 % Go through and save as a cell in a format suitable for excel files
 count = 0;
 for kk = 1:length(Temp_Dat)
-    if kk == group1_matrices+1
+    if kk == group1_matrices+1 || kk == group_matrices+1 
         count = count+3;
     else
         count = count+1;
@@ -385,6 +419,7 @@ for row = 1:nrows
     end
     fprintf(fid, '\n');
 end
+
 
 
 end

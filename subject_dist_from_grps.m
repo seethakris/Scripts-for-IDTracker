@@ -1,4 +1,5 @@
-function subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject)
+
+function subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject, time_near)
 
 %% Find average distance of subject when fish from the groups are closer to the subject tank
 %% TMin and TMax are optional inputs, if left empty, the entire time is considered
@@ -19,6 +20,9 @@ warning off
 %   behavior (in percent). Default - 0% (border closest to subject fish) to 25%
 %   Num_fish_close_to_subject - the least number of fish that need to be near the subject
 %   to include that frame. Default - 3
+%   time_near - time (seconds) to find stats on those frames where groups of fish were
+%   near the subject for the time specified. Default - 1 second
+
 
 %% Check for inputs else use default values
 pixel_to_mm_change = 3.05; % Using approx. 3.05 pixels/mm
@@ -61,6 +65,11 @@ else
     Num_fish_close_to_subject = 3;
 end
 
+if exist('time_near') && ~isempty(time_near)
+    Time_threshold = time_near;
+else
+    Time_threshold = 1;
+end
 
 Inputs_provided.Frames_per_sec = Frames_per_sec;
 Inputs_provided.frame_bin = frame_bin;
@@ -68,12 +77,12 @@ Inputs_provided.FirstFrame = FirstFrame;
 Inputs_provided.Minimum_ythresh = Minimum_ythresh;
 Inputs_provided.Maximum_ythresh = Maximum_ythresh;
 Inputs_provided.Num_fish_close_to_subject = Num_fish_close_to_subject;
+Inputs_provided.Time_threshold = Time_threshold;
 
 
 %% Main Script
 PathName = uigetdir(pwd, 'Select modified trajectories file');
 FileName = dir([PathName, filesep,'*modified*.mat']);
-
 
 % Find y threshold using data of all fish to find the most accurate boundary.
 grp_traj_X = [];
@@ -110,6 +119,7 @@ coordinates_Y_sub = (max(sub_traj_Y)+min(sub_traj_Y))/2;
 
 clear grp_traj_X grp_traj_Y traj grp1_traj_X grp2_traj_X sub_traj_X sub_traj_Y
 
+
 for ii = 1:length(FileName)
     
     %Save Figures and excel files in these Folder
@@ -140,13 +150,15 @@ for ii = 1:length(FileName)
     % Find frames where groups of fish (2 or more) are within the ROI
     if frame_bin == 1
         
-        [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp,...
-            coordinates_X_sub,coordinates_Y_sub,Num_fish_close_to_subject,pixel_to_mm_change);
+        [Distance, Quadrant_Stats, Time_Threshold] = get_frames_within_ROI(traj, Frames_per_sec, FirstFrame, LastFrame,coordinates_y_grp,...
+            coordinates_X_sub,coordinates_Y_sub,Num_fish_close_to_subject,pixel_to_mm_change,Time_threshold);
+        
         
         % Save Files
         % Get a name file using all inputs to create unique files for each input
         name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
-            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%',...
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
         % 1. As a matfile
         save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Quadrant_Stats', 'Inputs_provided');
@@ -156,7 +168,7 @@ for ii = 1:length(FileName)
         [fs1] = plot_trajectories(traj,Distance,pixel_to_mm_change);
         name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
         set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
         saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
@@ -165,7 +177,7 @@ for ii = 1:length(FileName)
         [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
         name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
         set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
         saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
@@ -173,24 +185,24 @@ for ii = 1:length(FileName)
         % 3. As a excel file
         name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+            '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
-        save_as_excel(Distance,Quadrant_Stats, name_file, Result_Folder_excel);
+        save_as_excel(Distance,Quadrant_Stats,Time_Threshold, name_file, Result_Folder_excel);
         
     else
         
         
         for jj = FirstFrame:frame_bin:LastFrame %If the user requires binning of time
             
-            [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, jj, jj+frame_bin,coordinates_y_grp,...
-                coordinates_X_sub, coordinates_Y_sub, Num_fish_close_to_subject,pixel_to_mm_change);
+            [Distance, Quadrant_Stats,Time_Threshold] = get_frames_within_ROI(traj, Frames_per_sec, jj, jj+frame_bin,coordinates_y_grp,...
+                coordinates_X_sub, coordinates_Y_sub, Num_fish_close_to_subject,pixel_to_mm_change, Time_threshold);
             
             % Save files
             % 1. As a matfile
             %Get a name file using all inputs to create unique files for each input
             name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             
             save([Result_Folder_matfiles, filesep, name_file], 'Distance', 'Inputs_provided');
             
@@ -199,7 +211,7 @@ for ii = 1:length(FileName)
             [fs1] = plot_trajectories(traj,Distance,pixel_to_mm_change);
             name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             
             set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
             saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
@@ -209,7 +221,7 @@ for ii = 1:length(FileName)
             [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
             name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             
             set(gcf, 'PaperPositionMode','auto','InvertHardCopy', 'off')
             saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
@@ -217,9 +229,9 @@ for ii = 1:length(FileName)
             % 3. As a excel file
             name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
-                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject)];
+                '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             
-            save_as_excel(Distance,Quadrant_Stats, name_file, Result_Folder_excel);
+            save_as_excel(Distance,Quadrant_Stats,Time_Threshold, name_file, Result_Folder_excel);
             
         end
     end
@@ -231,11 +243,11 @@ end
 
 
 %% Function to find frames where groups of fish are within user given ROI
-function [Distance, Quadrant_Stats] = get_frames_within_ROI(traj, FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change)
+function [Distance, Quadrant_Stats, Time_Threshold] = get_frames_within_ROI(traj, Frames_per_sec, FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change, Time_threshold)
 
 close all
 
-%Group 1
+%% Group 1
 % 1. Find frames and x,y position where groups of fish were within specified ROI
 Data_grpy = traj.grp1_XY_mod(FirstFrame:LastFrame,:,2);
 Data_grp1 = traj.grp1_XY_mod(FirstFrame:LastFrame,:,:);
@@ -266,7 +278,28 @@ Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)>coordinates_X_sub & Frame
 Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)<coordinates_X_sub & Frames_subject_grp1_pos(:,2)<coordinates_Y_sub) = 3; %Group1 far
 Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)>coordinates_X_sub & Frames_subject_grp1_pos(:,2)<coordinates_Y_sub) = 4; %Group2 far
 
-% Group2
+% 7. Find frames where groups of fish were near subject for the amount
+% of time specified by user (in seconds)
+Frames_sec_grp1 = fix(Frames_grp1./Frames_per_sec);
+count = 1;
+temp_seconds = unique(Frames_sec_grp1);
+
+Time_found_grp1 = 0;
+Time_centremass_grp1 = 0;
+Time_subdistance_grp1 = 0;
+Time_quadrant_grp1 = 0;
+
+for ii = 1:length(temp_seconds)
+    if size(find(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
+        Time_found_grp1(count,1) = temp_seconds(ii);
+        Time_centremass_grp1(count,1) = mean(Centre_mass_grp1_mm(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_subdistance_grp1(count,1) = mean(Dist_subject_from_grp1_pos_mm(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_quadrant_grp1(count,1) = fix(median(Quadrant_subject_grp1_pos(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
+        count = count+1;
+    end
+end
+
+%% Group2
 % 1. Find frames and x,y position where groups of fish were within specified ROI
 Data_grpy = traj.grp2_XY_mod(FirstFrame:LastFrame,:,2);
 Data_grp2 = traj.grp2_XY_mod(FirstFrame:LastFrame,:,:);
@@ -298,12 +331,33 @@ Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)<coordinates_X_sub & Frame
 Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)>coordinates_X_sub & Frames_subject_grp2_pos(:,2)<coordinates_Y_sub) = 4; %Group2 far
 
 
-% 7. Find frames where both groups are at the ROI
+% 7. Find frames where groups of fish were near subject for the amount
+% of time specified by user (in seconds)
+Frames_sec_grp2 = fix(Frames_grp2./Frames_per_sec);
+count = 1;
+temp_seconds = unique(Frames_sec_grp2);
+
+Time_found_grp2 = 0;
+Time_centremass_grp2 = 0;
+Time_subdistance_grp2 = 0;
+Time_quadrant_grp2 = 0;
+
+for ii = 1:length(temp_seconds)
+    if size(find(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
+        Time_found_grp2(count,1) = temp_seconds(ii);
+        Time_centremass_grp2(count,1) = mean(Centre_mass_grp2_mm(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_subdistance_grp2(count,1) = mean(Dist_subject_from_grp2_pos_mm(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_quadrant_grp2(count,1) = fix(median(Quadrant_subject_grp2_pos(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
+        count = count+1;
+    end
+end
+
+% 8. Find frames where both groups are at the ROI
 Frames_both_grp1 = ismember(Frames_grp1, Frames_grp2); %0-only group1, 1-both group1 and 2
 Frames_both_grp2 = ismember(Frames_grp2, Frames_grp1); %0-only group2, 1-both group1 and 2
 
 
-%8. Seperate stats based on Quadrant
+% 9. Seperate stats based on Quadrant
 for ii = 1:4
     Quadrant_num(ii,1) = ii;
     Quadrant_count_grp1(ii,1) = size(find(Quadrant_subject_grp1_pos==ii),1);
@@ -314,6 +368,8 @@ for ii = 1:4
     Quadrant_Centremass_grp2(ii,1) = mean(Centre_mass_grp2(Quadrant_subject_grp2_pos==ii)/pixel_to_mm_change);
     Quadrant_subdist_grp2(ii,1) = mean(Dist_subject_from_grp2_pos_mm(Quadrant_subject_grp2_pos==ii));
 end
+
+
 
 %% Save as Matfile
 Distance.Frames_grp1 = Frames_grp1;
@@ -344,11 +400,21 @@ Quadrant_Stats.Quadrant_count_grp2 = Quadrant_count_grp2;
 Quadrant_Stats.Quadrant_Centremass_grp2 = Quadrant_Centremass_grp2;
 Quadrant_Stats.Quadrant_subdist_grp2 = Quadrant_subdist_grp2;
 
+Time_Threshold.Time_found_grp1 = Time_found_grp1;
+Time_Threshold.Time_centremass_grp1 = Time_centremass_grp1;
+Time_Threshold.Time_subdistance_grp1 = Time_subdistance_grp1;
+Time_Threshold.Time_quadrant_grp1 = Time_quadrant_grp1;
+Time_Threshold.Time_found_grp2 = Time_found_grp2;
+Time_Threshold.Time_centremass_grp2 = Time_centremass_grp2;
+Time_Threshold.Time_subdistance_grp2 = Time_subdistance_grp2;
+Time_Threshold.Time_quadrant_grp2 = Time_quadrant_grp2;
+
 end
 
 
+
 %% Save as Excel
-function save_as_excel(Distance, Quadrant_Stats, name_file, Result_Folder_excel)
+function save_as_excel(Distance, Quadrant_Stats, Time_Threshold, name_file, Result_Folder_excel)
 
 % 1. First save distances with names suitable for excel files
 
@@ -372,11 +438,23 @@ Distance1.Quadrant = Quadrant_Stats.Quadrant_num;
 Distance1.Count_grp1 = Quadrant_Stats.Quadrant_count_grp1;
 Distance1.Centremass_grp1 = Quadrant_Stats.Quadrant_Centremass_grp1;
 Distance1.Subdist_grp1 = Quadrant_Stats.Quadrant_subdist_grp1;
-
-
 Distance1.Count_grp2 = Quadrant_Stats.Quadrant_count_grp2;
 Distance1.Centremass_grp2 = Quadrant_Stats.Quadrant_Centremass_grp2;
 Distance1.Subdist_grp2 = Quadrant_Stats.Quadrant_subdist_grp2;
+
+quad_matrices = 17;
+
+Distance1.Group1_time_secs = Time_Threshold.Time_found_grp1;
+Distance1.Group1_time_centre_mass_mm = Time_Threshold.Time_centremass_grp1;
+Distance1.Group1_time_subjectdist_mm = Time_Threshold.Time_subdistance_grp1;
+Distance1.Group1_time_subject_quadrant = Time_Threshold.Time_quadrant_grp1;
+
+group_time_matrices = 21;
+
+Distance1.Group2_time_secs = Time_Threshold.Time_found_grp2;
+Distance1.Group2_time_centre_mass_mm = Time_Threshold.Time_centremass_grp2;
+Distance1.Group2_time_subjectdist_mm = Time_Threshold.Time_subdistance_grp2;
+Distance1.Group2_time_subject_quadrant = Time_Threshold.Time_quadrant_grp2;
 
 clear Distance Quadrant_Stats
 
@@ -387,7 +465,7 @@ fid = fopen(filename, 'w+');
 % Go through and save as a cell in a format suitable for excel files
 count = 0;
 for kk = 1:length(Temp_Dat)
-    if kk == group1_matrices+1 || kk == group_matrices+1 
+    if kk == group1_matrices+1 || kk == group_matrices+1 || kk == quad_matrices+1 || kk == group_time_matrices+1
         count = count+3;
     else
         count = count+1;

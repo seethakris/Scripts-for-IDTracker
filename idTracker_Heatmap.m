@@ -71,18 +71,18 @@ for ii = 1:length(FileName)
         %Subject
         [TimeSpent] = find_mean_time(traj.subject_XY_mod(jj:jj+frame_bin-1,:,1), traj.subject_XY_mod(jj:jj+frame_bin-1,:,2),TimeSpent,expandnum_sub);
         
-        plot_heatmap(TimeSpent, smth, cmin, cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder,jj, frame_bin)
+        plot_heatmap(TimeSpent, smth, cmin, cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder,SaveName,jj, frame_bin)
         
         OverallTimeSpent = OverallTimeSpent + TimeSpent;
     end
     
-    plot_heatmap(OverallTimeSpent, smth, cmin, cmax*5, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps,expandnum, Result_Folder)
+    plot_heatmap(OverallTimeSpent, smth, cmin, cmax*5, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps,expandnum, Result_Folder,SaveName)
 end
 
 end
 
 %% Plot Heatmaps
-function plot_heatmap(TimeSpent,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder, jj, frame_bin)
+function plot_heatmap(TimeSpent,smth, cmin,cmax, min_traj_X, min_traj_Y, max_traj_X, max_traj_Y, fps, expandnum, Result_Folder, SaveName, jj, frame_bin)
 
 %Plot Heatmaps - after smoothing
 resize_factor = 0.5;
@@ -112,8 +112,8 @@ colormap(jet(2000))
 
 ylabel(cbar_handle, 'seconds/pixel','FontSize',12)
 
-if nargin == 13
-    name_file = ['HeatMap_T= ',int2str(round(jj./fps)), ' To ', int2str(round((jj+frame_bin-1)./fps)),'secs'];
+if nargin == 14
+    name_file = [SaveName, '_T=',int2str(round(jj./fps)), 'To', int2str(round((jj+frame_bin-1)./fps))];
 else
     name_file = ['HeatMap_AllTimePoints'];
 end

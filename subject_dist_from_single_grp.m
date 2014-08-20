@@ -29,43 +29,43 @@ pixel_to_mm_change = 3.05; % Using approx. 3.05 pixels/mm
 
 
 % If user specified inputs, else default
-if exist('fps') && ~isempty(fps)
+if exist('fps','var') && ~isempty(fps)
     Frames_per_sec = fps;
 else
     Frames_per_sec = 30;
 end
 
-if exist('tbin') && ~isempty(tbin)
+if exist('tbin','var') && ~isempty(tbin)
     frame_bin = tbin*Frames_per_sec;
 else
     frame_bin = 1;
 end
 
-if exist('TMin') && ~isempty(TMin)
+if exist('TMin','var') && ~isempty(TMin)
     FirstFrame = round(TMin*Frames_per_sec);
 else
     FirstFrame = 1;
 end
 
-if exist('y_thresh_min') && ~isempty(y_thresh_min)
+if exist('y_thresh_min','var') && ~isempty(y_thresh_min)
     Minimum_ythresh = y_thresh_min;
 else
     Minimum_ythresh = 0;
 end
 
-if exist('y_thresh_max') && ~isempty(y_thresh_max)
+if exist('y_thresh_max','var') && ~isempty(y_thresh_max)
     Maximum_ythresh = y_thresh_max;
 else
     Maximum_ythresh = 25;
 end
 
-if exist('Num_fish_close_to_subject') && ~isempty(Num_fish_close_to_subject)
+if exist('Num_fish_close_to_subject','var') && ~isempty(Num_fish_close_to_subject)
     Num_fish_close_to_subject;
 else
     Num_fish_close_to_subject = 3;
 end
 
-if exist('time_near') && ~isempty(time_near)
+if exist('time_near','var') && ~isempty(time_near)
     Time_threshold = time_near;
 else
     Time_threshold = 1;

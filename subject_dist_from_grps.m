@@ -84,6 +84,10 @@ Inputs_provided.Time_threshold = Time_threshold;
 PathName = uigetdir(pwd, 'Select modified trajectories file');
 FileName = dir([PathName, filesep,'*modified*.mat']);
 
+if isempty(FileName)
+    return;
+end
+
 % Find y threshold using data of all fish to find the most accurate boundary.
 grp_traj_X = [];
 grp_traj_Y = [];

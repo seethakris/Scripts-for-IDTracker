@@ -108,6 +108,20 @@ for ii = 1:length(FileName)
     
     sub_traj_X = [sub_traj_X; traj.subject_XY_mod(:,1,1)];
     sub_traj_Y = [sub_traj_Y; traj.subject_XY_mod(:,1,2)];
+    
+end
+
+%Plot
+fs = figure(1);
+plot(grp_traj_X, grp_traj_Y, 'b')
+hold on
+plot(sub_traj_X, sub_traj_Y, 'r')
+hold off
+
+%Check with the user if trajectories are OK
+button = questdlg('Do you want to keep these experiments in the same folder?', 'Verify trajectories', 'OK', 'Cancel','OK');
+if strcmp(button,'Cancel')
+    disp('Canceled file operation')
 end
 
 % Find y min and y max using the grp trajectories
@@ -116,6 +130,7 @@ coordinates_y_grp(2) = min(grp_traj_Y) + (max(grp_traj_Y)-min(grp_traj_Y))*(Maxi
 
 coordinates_X_sub = (max(grp1_traj_X)+min(grp2_traj_X))/2;
 coordinates_Y_sub = (max(sub_traj_Y)+min(sub_traj_Y))/2;
+
 
 clear grp_traj_X grp_traj_Y traj grp1_traj_X grp2_traj_X sub_traj_X sub_traj_Y
 
@@ -183,7 +198,7 @@ for ii = 1:length(FileName)
         saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
         
         % 3. As a excel file
-        name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+        name_file = [SaveName, '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
@@ -227,7 +242,7 @@ for ii = 1:length(FileName)
             saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
             
             % 3. As a excel file
-            name_file = ['D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            name_file = [SaveName, '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             

@@ -50,13 +50,13 @@ end
 if exist('y_thresh_min') && ~isempty(y_thresh_min)
     Minimum_ythresh = y_thresh_min;
 else
-    Minimum_ythresh = 75;
+    Minimum_ythresh = 0;
 end
 
 if exist('y_thresh_max') && ~isempty(y_thresh_max)
     Maximum_ythresh = y_thresh_max;
 else
-    Maximum_ythresh = 100;
+    Maximum_ythresh = 25;
 end
 
 if exist('Num_fish_close_to_subject') && ~isempty(Num_fish_close_to_subject)

@@ -190,7 +190,7 @@ for ii = 1:length(FileName)
         saveas(fs1, [Result_Folder_figures, filesep, name_file], 'tif');
         
         %Save distance we had between subject and groups
-        [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
+        [fs2] = plot_distance_sub_grp(Distance);
         name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
@@ -234,7 +234,7 @@ for ii = 1:length(FileName)
             
             
             %Save distance we had between subject and groups
-            [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change);
+            [fs2] = plot_distance_sub_grp(Distance);
             name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
@@ -296,9 +296,9 @@ Quadrant_subject_grp1_pos(Frames_subject_grp1_pos(:,1)>coordinates_X_sub & Frame
 
 % 7. Find frames where groups of fish were near subject for the amount
 % of time specified by user (in seconds)
-Frames_sec_grp1 = fix(Frames_grp1./Frames_per_sec);
+Frames_sec_grp1 = Frames_grp1./Frames_per_sec;
 count = 1;
-temp_seconds = unique(Frames_sec_grp1);
+temp_seconds = unique(fix(Frames_sec_grp1));
 
 Time_found_grp1 = 0;
 Time_centremass_grp1 = 0;
@@ -306,11 +306,11 @@ Time_subdistance_grp1 = 0;
 Time_quadrant_grp1 = 0;
 
 for ii = 1:length(temp_seconds)
-    if size(find(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
+    if size(find(ismember(fix(Frames_sec_grp1), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
         Time_found_grp1(count,1) = temp_seconds(ii);
-        Time_centremass_grp1(count,1) = mean(Centre_mass_grp1_mm(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
-        Time_subdistance_grp1(count,1) = mean(Dist_subject_from_grp1_pos_mm(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
-        Time_quadrant_grp1(count,1) = fix(median(Quadrant_subject_grp1_pos(ismember(Frames_sec_grp1, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
+        Time_centremass_grp1(count,1) = mean(Centre_mass_grp1_mm(ismember(fix(Frames_sec_grp1), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_subdistance_grp1(count,1) = mean(Dist_subject_from_grp1_pos_mm(ismember(fix(Frames_sec_grp1), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_quadrant_grp1(count,1) = fix(median(Quadrant_subject_grp1_pos(ismember(fix(Frames_sec_grp1), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
         count = count+1;
     end
 end
@@ -349,9 +349,9 @@ Quadrant_subject_grp2_pos(Frames_subject_grp2_pos(:,1)>coordinates_X_sub & Frame
 
 % 7. Find frames where groups of fish were near subject for the amount
 % of time specified by user (in seconds)
-Frames_sec_grp2 = fix(Frames_grp2./Frames_per_sec);
+Frames_sec_grp2 = Frames_grp2./Frames_per_sec;
 count = 1;
-temp_seconds = unique(Frames_sec_grp2);
+temp_seconds = unique(fix(Frames_sec_grp2));
 
 Time_found_grp2 = 0;
 Time_centremass_grp2 = 0;
@@ -359,11 +359,11 @@ Time_subdistance_grp2 = 0;
 Time_quadrant_grp2 = 0;
 
 for ii = 1:length(temp_seconds)
-    if size(find(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
+    if size(find(ismember(fix(Frames_sec_grp2), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1),1)>=Frames_per_sec*Time_threshold
         Time_found_grp2(count,1) = temp_seconds(ii);
-        Time_centremass_grp2(count,1) = mean(Centre_mass_grp2_mm(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
-        Time_subdistance_grp2(count,1) = mean(Dist_subject_from_grp2_pos_mm(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
-        Time_quadrant_grp2(count,1) = fix(median(Quadrant_subject_grp2_pos(ismember(Frames_sec_grp2, temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
+        Time_centremass_grp2(count,1) = mean(Centre_mass_grp2_mm(ismember(fix(Frames_sec_grp2), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_subdistance_grp2(count,1) = mean(Dist_subject_from_grp2_pos_mm(ismember(fix(Frames_sec_grp2), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1));
+        Time_quadrant_grp2(count,1) = fix(median(Quadrant_subject_grp2_pos(ismember(fix(Frames_sec_grp2), temp_seconds(ii):temp_seconds(ii)+Time_threshold-1)==1)));
         count = count+1;
     end
 end
@@ -389,6 +389,7 @@ end
 
 %% Save as Matfile
 Distance.Frames_grp1 = Frames_grp1;
+Distance.Frames_grp1_sec = Frames_sec_grp1;
 Distance.Frames_grp1_pos = Frames_grp1_pos;
 Distance.Frames_subject_grp1_pos = Frames_subject_grp1_pos;
 Distance.Centre_mass_grp1 = Centre_mass_grp1;
@@ -399,6 +400,7 @@ Distance.Frames_both_grp1 = Frames_both_grp1;
 Distance.Quadrant_subject_grp1_pos = Quadrant_subject_grp1_pos;
 
 Distance.Frames_grp2 = Frames_grp2;
+Distance.Frames_grp2_sec = Frames_sec_grp2;
 Distance.Frames_grp2_pos = Frames_grp2_pos;
 Distance.Frames_subject_grp2_pos = Frames_subject_grp2_pos;
 Distance.Centre_mass_grp2 = Centre_mass_grp2;
@@ -435,20 +437,22 @@ function save_as_excel(Distance, Quadrant_Stats, Time_Threshold, name_file, Resu
 % 1. First save distances with names suitable for excel files
 
 Distance1.Group1_frames = Distance.Frames_grp1;
+Distance1.Group1_frames_sec = fix(Distance.Frames_grp1_sec);
 Distance1.Group1_centre_mass_mm = Distance.Centre_mass_grp1_mm;
 Distance1.Group1_subjectdist_mm = Distance.Dist_subject_from_grp1_pos_mm;
 Distance1.Group1_and_group2_frames = Distance.Frames_both_grp1;
 Distance1.Group1_subject_quadrant = Distance.Quadrant_subject_grp1_pos;
 
-group1_matrices = 5; % to know how many Group2 vs Group1 quantifications - provide a gap while saving in excel
+group1_matrices = 6; % to know how many Group2 vs Group1 quantifications - provide a gap while saving in excel
 
 Distance1.Group2_frames = Distance.Frames_grp2;
+Distance1.Group2_frames_sec = fix(Distance.Frames_grp2_sec);
 Distance1.Group2_centre_mass_mm = Distance.Centre_mass_grp2_mm;
 Distance1.Group2_subjectdist_mm = Distance.Dist_subject_from_grp2_pos_mm;
 Distance1.Group2_and_group1_frames = Distance.Frames_both_grp2;
 Distance1.Group2_subject_quadrant = Distance.Quadrant_subject_grp2_pos;
 
-group_matrices = 10; % to know how many group quantifications - provide a gap while saving in excel
+group_matrices = 12; % to know how many group quantifications - provide a gap while saving in excel
 
 Distance1.Quadrant = Quadrant_Stats.Quadrant_num;
 Distance1.Count_Group1 = Quadrant_Stats.Quadrant_count_grp1;
@@ -458,14 +462,14 @@ Distance1.Count_Group2 = Quadrant_Stats.Quadrant_count_grp2;
 Distance1.Centremass_Group2 = Quadrant_Stats.Quadrant_Centremass_grp2;
 Distance1.Subdist_Group2 = Quadrant_Stats.Quadrant_subdist_grp2;
 
-quad_matrices = 17;
+quad_matrices = 19;
 
 Distance1.Group1_time_secs = Time_Threshold.Time_found_grp1;
 Distance1.Group1_time_centre_mass_mm = Time_Threshold.Time_centremass_grp1;
 Distance1.Group1_time_subjectdist_mm = Time_Threshold.Time_subdistance_grp1;
 Distance1.Group1_time_subject_quadrant = Time_Threshold.Time_quadrant_grp1;
 
-group_time_matrices = 21;
+group_time_matrices = 23;
 
 Distance1.Group2_time_secs = Time_Threshold.Time_found_grp2;
 Distance1.Group2_time_centre_mass_mm = Time_Threshold.Time_centremass_grp2;
@@ -513,8 +517,6 @@ for row = 1:nrows
     end
     fprintf(fid, '\n');
 end
-
-
 
 end
 
@@ -570,7 +572,7 @@ end
 
 
 
-function [fs2] = plot_distance_sub_grp(Distance,pixel_to_mm_change)
+function [fs2] = plot_distance_sub_grp(Distance)
 % 2. Plot distance from centre of mass of groups and subject for selected
 % frames
 

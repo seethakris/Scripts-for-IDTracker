@@ -122,6 +122,7 @@ hold off
 button = questdlg('Do you want to keep these experiments in the same folder?', 'Verify trajectories', 'OK', 'Cancel','OK');
 if strcmp(button,'Cancel')
     disp('Canceled file operation')
+    return;
 end
 
 % Find y min and y max using the grp trajectories

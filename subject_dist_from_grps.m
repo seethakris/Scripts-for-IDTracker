@@ -1,4 +1,3 @@
-
 function subject_dist_from_grps(fps, TMin, TMax, tbin, y_thresh_min, y_thresh_max,Num_fish_close_to_subject, time_near)
 
 %% Find average distance of subject when fish from the groups are closer to the subject tank
@@ -122,6 +121,7 @@ hold on
 plot(sub_traj_X, sub_traj_Y, 'r')
 hold off
 
+
 %Check with the user if trajectories are OK
 button = questdlg('Do you want to keep these experiments in the same folder?', 'Verify trajectories', 'OK', 'Cancel','OK');
 if strcmp(button,'Cancel')
@@ -176,7 +176,7 @@ for ii = 1:length(FileName)
         
         % Save Files
         % Get a name file using all inputs to create unique files for each input
-        name_file = [SaveName,'D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+        name_file = [SaveName,'_Subject_from_G', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%',...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
@@ -203,7 +203,7 @@ for ii = 1:length(FileName)
         saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
         
         % 3. As a excel file
-        name_file = [SaveName, '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+        name_file = [SaveName, '_Subject_from_G','_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
@@ -220,7 +220,7 @@ for ii = 1:length(FileName)
             % Save files
             % 1. As a matfile
             %Get a name file using all inputs to create unique files for each input
-            name_file = [SaveName,'D_sub_grp_input', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            name_file = [SaveName,'_Subject_from_G', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             
@@ -247,7 +247,7 @@ for ii = 1:length(FileName)
             saveas(fs2, [Result_Folder_figures, filesep, name_file], 'tif');
             
             % 3. As a excel file
-            name_file = [SaveName, '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+            name_file = [SaveName,'_Subject_from_G', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
                 '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
                 '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
             

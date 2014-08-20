@@ -29,43 +29,43 @@ pixel_to_mm_change = 3.05; % Using approx. 3.05 pixels/mm
 
 
 % If user specified inputs, else default
-if exist('fps') && ~isempty(fps)
+if exist('fps','var') && ~isempty(fps)
     Frames_per_sec = fps;
 else
     Frames_per_sec = 30;
 end
 
-if exist('tbin') && ~isempty(tbin)
+if exist('tbin','var') && ~isempty(tbin)
     frame_bin = tbin*Frames_per_sec;
 else
     frame_bin = 1;
 end
 
-if exist('TMin') && ~isempty(TMin)
+if exist('TMin','var') && ~isempty(TMin)
     FirstFrame = round(TMin*Frames_per_sec);
 else
     FirstFrame = 1;
 end
 
-if exist('y_thresh_min') && ~isempty(y_thresh_min)
+if exist('y_thresh_min','var') && ~isempty(y_thresh_min)
     Minimum_ythresh = y_thresh_min;
 else
     Minimum_ythresh = 0;
 end
 
-if exist('y_thresh_max') && ~isempty(y_thresh_max)
+if exist('y_thresh_max','var') && ~isempty(y_thresh_max)
     Maximum_ythresh = y_thresh_max;
 else
     Maximum_ythresh = 25;
 end
 
-if exist('Num_fish_close_to_subject') && ~isempty(Num_fish_close_to_subject)
-    Num_fish_close_to_subject;
+if exist('Num_fish_close_to_subject','var') && ~isempty(Num_fish_close_to_subject)
+
 else
     Num_fish_close_to_subject = 3;
 end
 
-if exist('time_near') && ~isempty(time_near)
+if exist('time_near','var') && ~isempty(time_near)
     Time_threshold = time_near;
 else
     Time_threshold = 1;
@@ -155,7 +155,7 @@ for ii = 1:length(FileName)
     NumFrames = size(traj.grp1_XY_mod, 1);
     
     % Find Last frame (TMax)
-    if exist('TMax') && ~isempty(TMax)
+    if exist('TMax','var') && ~isempty(TMax)
         LastFrame = FirstFrame + frame_bin*fix((TMax*Frames_per_sec-FirstFrame)/frame_bin);
     else
         LastFrame = FirstFrame + frame_bin*fix((NumFrames-FirstFrame)/frame_bin);
@@ -451,12 +451,12 @@ Distance1.Group2_subject_quadrant = Distance.Quadrant_subject_grp2_pos;
 group_matrices = 10; % to know how many group quantifications - provide a gap while saving in excel
 
 Distance1.Quadrant = Quadrant_Stats.Quadrant_num;
-Distance1.Count_grp1 = Quadrant_Stats.Quadrant_count_grp1;
-Distance1.Centremass_grp1 = Quadrant_Stats.Quadrant_Centremass_grp1;
-Distance1.Subdist_grp1 = Quadrant_Stats.Quadrant_subdist_grp1;
-Distance1.Count_grp2 = Quadrant_Stats.Quadrant_count_grp2;
-Distance1.Centremass_grp2 = Quadrant_Stats.Quadrant_Centremass_grp2;
-Distance1.Subdist_grp2 = Quadrant_Stats.Quadrant_subdist_grp2;
+Distance1.Count_Group1 = Quadrant_Stats.Quadrant_count_grp1;
+Distance1.Centremass_Group1 = Quadrant_Stats.Quadrant_Centremass_grp1;
+Distance1.Subdist_Group1 = Quadrant_Stats.Quadrant_subdist_grp1;
+Distance1.Count_Group2 = Quadrant_Stats.Quadrant_count_grp2;
+Distance1.Centremass_Group2 = Quadrant_Stats.Quadrant_Centremass_grp2;
+Distance1.Subdist_Group2 = Quadrant_Stats.Quadrant_subdist_grp2;
 
 quad_matrices = 17;
 

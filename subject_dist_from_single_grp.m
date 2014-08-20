@@ -131,6 +131,7 @@ box off
 button = questdlg('Do you want to keep these experiments in the same folder?', 'Verify trajectories', 'OK', 'Cancel','OK');
 if strcmp(button,'Cancel')
     disp('Canceled file operation')
+    return;
 end
 
 % Find y min and y max using the grp trajectories
@@ -191,7 +192,7 @@ for ii = 1:length(FileName)
         % 2. As a figure
         %Save trajectories figure
         [fs1] = plot_trajectories(Distance,pixel_to_mm_change, Inputs_provided.grp_string);
-        name_file = ['Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+        name_file = [SaveName,'Thresholded_Positions_Median', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
@@ -200,7 +201,7 @@ for ii = 1:length(FileName)
         
         %Save distance we had between subject and groups
         [fs2] = plot_distance_sub_grp(Distance, Inputs_provided.grp_string);
-        name_file = ['Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
+        name_file = [SaveName, 'Distance_sub_grp_', '_T=',int2str(round(FirstFrame./Frames_per_sec)), 'to', int2str(round((LastFrame)./Frames_per_sec)),'secs',...
             '_ythresh_', int2str(Inputs_provided.Minimum_ythresh), '%to' , int2str(Inputs_provided.Maximum_ythresh), '%', ...
             '_leastfish_', int2str(Inputs_provided.Num_fish_close_to_subject), '_timethreshold_', int2str(Inputs_provided.Time_threshold),'secs'];
         
@@ -278,8 +279,7 @@ function [Distance, Quadrant_Stats, Time_Threshold] = get_frames_within_ROI(grp_
         FirstFrame, LastFrame,coordinates_y_grp, coordinates_X_sub, coordinates_Y_sub, Num_fish,pixel_to_mm_change, Time_threshold)
     
 
-
-%% Group 1
+%% Group
 % 1. Find frames and x,y position where groups of fish were within specified ROI
 Data_grpy = grp_XY_mod(FirstFrame:LastFrame,:,2);
 Data_grp = grp_XY_mod(FirstFrame:LastFrame,:,:);
@@ -332,12 +332,19 @@ for ii = 1:length(temp_seconds)
 end
 
 
-% 9. Seperate stats based on Quadrant
+% 9. Seperate stats based on Quadrant for all frames and those thresholded
+% based on time
+
 for ii = 1:4
+    
     Quadrant_num(ii,1) = ii;
     Quadrant_count_grp(ii,1) = size(find(Quadrant_subject_grp_pos==ii),1);
-    Quadrant_Centremass_grp(ii,1) = mean(Centre_mass_grp(Quadrant_subject_grp_pos==ii)/pixel_to_mm_change);
-    Quadrant_subdist_grp(ii,1) = mean(Dist_subject_from_grp_pos_mm(Quadrant_subject_grp_pos==ii));    
+    Quadrant_centremass_grp(ii,1) = mean(Centre_mass_grp_mm(Quadrant_subject_grp_pos==ii));
+    Quadrant_subdist_grp(ii,1) = mean(Dist_subject_from_grp_pos_mm(Quadrant_subject_grp_pos==ii));  
+    
+    Time_quadrant_count_grp(ii,1) = size(find(Time_quadrant_grp==ii),1);
+    Time_quadrant_centremass_grp(ii,1) = mean(Time_centremass_grp(Time_quadrant_grp==ii));
+    Time_quadrant_subdist_grp(ii,1) = mean(Time_subdistance_grp(Time_quadrant_grp==ii));
 end
 
 
@@ -354,13 +361,17 @@ Distance.Quadrant_subject_grp_pos = Quadrant_subject_grp_pos;
 
 Quadrant_Stats.Quadrant_num = Quadrant_num;
 Quadrant_Stats.Quadrant_count_grp = Quadrant_count_grp;
-Quadrant_Stats.Quadrant_Centremass_grp = Quadrant_Centremass_grp;
+Quadrant_Stats.Quadrant_centremass_grp = Quadrant_centremass_grp;
 Quadrant_Stats.Quadrant_subdist_grp = Quadrant_subdist_grp;
 
 Time_Threshold.Time_found_grp = Time_found_grp;
 Time_Threshold.Time_centremass_grp = Time_centremass_grp;
 Time_Threshold.Time_subdistance_grp = Time_subdistance_grp;
 Time_Threshold.Time_quadrant_grp = Time_quadrant_grp;
+
+Time_Threshold.Time_quadrant_count_grp = Time_quadrant_count_grp;
+Time_Threshold.Time_quadrant_centremass_grp =  Time_quadrant_centremass_grp;
+Time_Threshold.Time_quadrant_subdist_grp = Time_quadrant_subdist_grp;
 
 end
 
@@ -381,7 +392,7 @@ group_matrices = 5; % to know how many Group2 vs Group1 quantifications - provid
 
 Distance1.Quadrant = Quadrant_Stats.Quadrant_num;
 Distance1.(['Count_',grp_string]) = Quadrant_Stats.Quadrant_count_grp;
-Distance1.(['Centremass_',grp_string]) = Quadrant_Stats.Quadrant_Centremass_grp;
+Distance1.(['Centremass_',grp_string]) = Quadrant_Stats.Quadrant_centremass_grp;
 Distance1.(['Subdist_',grp_string]) = Quadrant_Stats.Quadrant_subdist_grp;
 
 quad_matrices = 9;
@@ -390,6 +401,13 @@ Distance1.([grp_string,'_time_secs']) = Time_Threshold.Time_found_grp;
 Distance1.([grp_string,'_time_centre_mass_mm']) = Time_Threshold.Time_centremass_grp;
 Distance1.([grp_string,'_time_subjectdist_mm']) = Time_Threshold.Time_subdistance_grp;
 Distance1.([grp_string,'_time_subject_quadrant']) = Time_Threshold.Time_quadrant_grp;
+
+group_time_matrices = 13;
+
+Distance1.Time_Quadrant = Quadrant_Stats.Quadrant_num;
+Distance1.(['Time_Count_',grp_string]) = Time_Threshold.Time_quadrant_count_grp;
+Distance1.(['Time_Centremass_',grp_string]) = Time_Threshold.Time_quadrant_centremass_grp;
+Distance1.(['Time_Subdist_',grp_string]) = Time_Threshold.Time_quadrant_subdist_grp;
 
 
 clear Distance Quadrant_Stats
@@ -401,7 +419,7 @@ fid = fopen(filename, 'w+');
 % Go through and save as a cell in a format suitable for excel files
 count = 0;
 for kk = 1:length(Temp_Dat)
-    if kk == group_matrices+1 || kk == quad_matrices+1 
+    if kk == group_matrices+1 || kk == quad_matrices+1 || kk == group_time_matrices+1
         count = count+3;
     else
         count = count+1;

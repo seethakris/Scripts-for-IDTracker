@@ -78,18 +78,29 @@ subject_XY = Traj.trajectories(:,subject_fish,:);
 
 %Approximate area that should be occupied by groups of fish.
 %[xleft,xright,ytop,ybottom];
-Group1_area =[90, 310,  280, 50];
+Group1_area =[100, 545,  300, 144];
 Group2_area =[310, 580, 280, 50];
-Subject_area =[90, 580, 390, 290];
+Subject_area =[100, 545,  300, 144];
 
 
 % Remove any misidentification in trajectory by finding big jumps
 % between consecutive points and interpolate -
 % seperately for each group of fish
 
-[grp1_XY_mod] = fix_trajectories(grp1_XY,threshold,1,Group1_area);
-[grp2_XY_mod] = fix_trajectories(grp2_XY,threshold,2,Group2_area);
-[subject_XY_mod] = fix_trajectories(subject_XY,threshold,3, Subject_area);
+if size(grp1_XY,2)==0
+    legend_string1 = {'grp2', 'subject'};
+    legend_string2 = {'grp1','mean grp1','subject','mean subject'};
+elseif size(grp2_XY,2)==0
+    legend_string1 = {'grp1', 'subject'};
+    legend_string2 = {'grp2','mean grp2', 'subject','mean subject'};
+elseif size(subject_XY,2)==0
+    legend_string1 = {'grp1', 'grp2'};
+    legend_string2 = {'grp1','mean grp1', 'grp2','mean grp2'};
+end
+
+[grp1_XY_mod] = fix_trajectories(grp1_XY,threshold,1,Group1_area, legend_string1, legend_string2);
+[grp2_XY_mod] = fix_trajectories(grp2_XY,threshold,2,Group2_area, legend_string1, legend_string2);
+[subject_XY_mod] = fix_trajectories(subject_XY,threshold,3, Subject_area, legend_string1, legend_string2);
 
 %Save Figures in This Folder
 Result_Folder = [PathName, filesep, 'Figures', filesep, FileName(1:end-4), filesep];

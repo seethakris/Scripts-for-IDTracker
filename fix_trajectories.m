@@ -1,4 +1,4 @@
-function [modified_trajectories] = fix_trajectories(traj,threshold,flag, area)
+function [modified_trajectories] = fix_trajectories(traj,threshold,flag, area, legend_string1, legend_string2)
 
 
 numFish = size(traj,2);
@@ -12,7 +12,8 @@ hold on
 temp = reshape(traj, size(traj,1)*size(traj,2),2);
 plot(temp(:,1), temp(:,2),color(flag));
 title('Before')
-legend('grp1', 'grp2', 'subject')
+legend(legend_string1)
+
 clear temp
 
 if flag == 1
@@ -105,5 +106,5 @@ temp = reshape(modified_trajectories, size(modified_trajectories,1)*size(modifie
 plot(temp(:,1), temp(:,2),color(flag));
 plot(mean(temp(:,1)), mean(temp(:,2)),'k*', 'MarkerSize',12)
 title('After')
-legend('grp1','mean grp1', 'grp2','mean grp2', 'subject','mean subject')
+legend(legend_string2)
 clear temp
